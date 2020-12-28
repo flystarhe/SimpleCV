@@ -28,7 +28,7 @@ code_mapping = {
 
 cvt_dir = abc.do_convert(img_dir, ann_dir, color=0)
 coco_dir = builder.build_dataset(cvt_dir, code_mapping)
-res = selection.split_dataset(coco_dir, seed=100, train_size=300, single_cls=False)
+res = selection.split_dataset(coco_dir, seed=100, train_size=300, single_cls=True)
 
 print(coco_dir, list(map(len, res)))
 from simplecv.utils.coco import analyze_anchor

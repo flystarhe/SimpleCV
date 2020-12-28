@@ -89,9 +89,17 @@ def split_dataset(in_dir, seed=1, train_size=50, single_cls=False):
         data_train.extend(_data_train)
         data_val.extend(_data_val)
     data_test = list(set(data_train + data_val))
-    prefix = "{}_{}".format("single_cls" if single_cls else "annotations", seed)
-    save_dataset(coco, data_train, in_dir / "{}/train.json".format(prefix), single_cls)
-    save_dataset(coco, data_test, in_dir / "{}/test.json".format(prefix), single_cls)
-    save_dataset(coco, data_val, in_dir / "{}/val.json".format(prefix), single_cls)
+
+    prefix = "{}_{}".format("annotations", seed)
+    save_dataset(coco, data_train, in_dir / "{}/train.json".format(prefix), False)
+    save_dataset(coco, data_test, in_dir / "{}/test.json".format(prefix), False)
+    save_dataset(coco, data_val, in_dir / "{}/val.json".format(prefix), False)
+
+    if single_cls:
+        prefix = "{}_{}".format("single_cls", seed)
+        save_dataset(coco, data_train, in_dir / "{}/train.json".format(prefix), True)
+        save_dataset(coco, data_test, in_dir / "{}/test.json".format(prefix), True)
+        save_dataset(coco, data_val, in_dir / "{}/val.json".format(prefix), True)
+
     print("[selection] train/test/val: {}/{}/{}".format(len(data_train), len(data_test), len(data_val)))
     return data_train, data_val
