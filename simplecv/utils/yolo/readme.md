@@ -5,12 +5,13 @@
 unzip -l data_xxxx.zip
 unzip data_xxxx.zip -d data_xxxx
 zip -r data_xxxx.zip data_xxxx readme.md
+for t in *.zip; do unzip -q "${t}" -d "zip_$(basename ${t} .zip)"; done
 ```
 
 ## dataset
 ```
 import sys
-SIMPLECV_PATH = ""
+SIMPLECV_PATH = "/workspace/SimpleCV"
 !cd {SIMPLECV_PATH} && git log --oneline -1
 if SIMPLECV_PATH not in sys.path:
     sys.path.insert(0, SIMPLECV_PATH)
