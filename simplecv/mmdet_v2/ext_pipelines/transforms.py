@@ -53,10 +53,10 @@ class RandomCrop(object):
         dst_h = dst_bboxes[:, 3] - dst_bboxes[:, 1]
         dst_area = dst_w * dst_h
 
-        s1 = (dst_area >= src_area * 0.9)
-        s2 = (dst_area >= self.width * self.height * 0.3)
-        s3 = (dst_h >= src_h * 0.9) * (dst_w >= self.width * 0.3)
-        s4 = (dst_w >= src_w * 0.9) * (dst_h >= self.height * 0.3)
+        s1 = (dst_area >= src_area * 0.7)
+        s2 = (dst_area >= self.width * self.height * 0.2)
+        s3 = (dst_h >= src_h * 0.7) * (dst_w >= src_h * 1.5)
+        s4 = (dst_w >= src_w * 0.7) * (dst_h >= src_w * 1.5)
 
         dst = s1 + s2 + s3 + s4
         drop = np.logical_not(dst)
