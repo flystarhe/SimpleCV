@@ -1,0 +1,138 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>simplecv.beta.hej.padding &#8212; SimpleCV 0.1 documentation</title>
+    <link rel="stylesheet" href="../../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    <script id="documentation_options" data-url_root="../../../../" src="../../../../_static/documentation_options.js"></script>
+    <script src="../../../../_static/jquery.js"></script>
+    <script src="../../../../_static/underscore.js"></script>
+    <script src="../../../../_static/doctools.js"></script>
+    <script src="../../../../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" />
+   
+  <link rel="stylesheet" href="../../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for simplecv.beta.hej.padding</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">copy</span>
+<span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">Path</span>
+
+<span class="kn">from</span> <span class="nn">simplecv.beta.hej</span> <span class="kn">import</span> <span class="n">io</span>
+
+
+<div class="viewcode-block" id="pad_coco_bbox"><a class="viewcode-back" href="../../../../simplecv.beta.hej.html#simplecv.beta.hej.padding.pad_coco_bbox">[docs]</a><span class="k">def</span> <span class="nf">pad_coco_bbox</span><span class="p">(</span><span class="n">coco_file</span><span class="p">,</span> <span class="n">min_size</span><span class="o">=</span><span class="mi">96</span><span class="p">,</span> <span class="n">pad_size</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">suffix</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sa">r</span><span class="sd">&#39;&#39;&#39;Padding coco file with `min_size` and `pad_size`.</span>
+
+<span class="sd">    Arguments:</span>
+<span class="sd">        coco_file (str): The path of a json file with coco format</span>
+<span class="sd">        min_size (int): If box w/h less this, will be padding</span>
+<span class="sd">        pad_size (int): Padding box with `pad_size`</span>
+<span class="sd">        suffix (str): Default `None`</span>
+
+<span class="sd">    Examples:</span>
+<span class="sd">        &gt;&gt;&gt; coco_file = &#39;/data/dataset1/coco.json&#39;</span>
+<span class="sd">        &gt;&gt;&gt; pad_coco_bbox(coco_file, min_size=96, pad_size=3, suffix=None)</span>
+<span class="sd">        &gt;&gt;&gt; # Save to &#39;/data/dataset1/coco.json.pad96_3&#39;</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="n">coco</span> <span class="o">=</span> <span class="n">io</span><span class="o">.</span><span class="n">load_coco</span><span class="p">(</span><span class="n">coco_file</span><span class="p">)</span>
+
+    <span class="n">new_annotations</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">ann</span> <span class="ow">in</span> <span class="n">coco</span><span class="p">[</span><span class="s1">&#39;annotations&#39;</span><span class="p">]:</span>
+        <span class="n">ann</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="n">ann</span><span class="p">)</span>
+        <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">w</span><span class="p">,</span> <span class="n">h</span> <span class="o">=</span> <span class="n">ann</span><span class="p">[</span><span class="s1">&#39;bbox&#39;</span><span class="p">]</span>
+        <span class="k">if</span> <span class="s1">&#39;segmentation&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">ann</span><span class="p">:</span>
+            <span class="n">ann</span><span class="p">[</span><span class="s1">&#39;segmentation&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="n">w</span> <span class="o">&lt;</span> <span class="n">min_size</span> <span class="ow">or</span> <span class="n">h</span> <span class="o">&lt;</span> <span class="n">min_size</span><span class="p">:</span>
+            <span class="n">nw</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">min_size</span><span class="p">,</span> <span class="n">w</span> <span class="o">+</span> <span class="n">pad_size</span> <span class="o">*</span> <span class="mi">2</span><span class="p">)</span> <span class="k">if</span> <span class="n">w</span> <span class="o">&lt;</span> <span class="n">min_size</span> <span class="k">else</span> <span class="n">w</span>
+            <span class="n">nh</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">min_size</span><span class="p">,</span> <span class="n">h</span> <span class="o">+</span> <span class="n">pad_size</span> <span class="o">*</span> <span class="mi">2</span><span class="p">)</span> <span class="k">if</span> <span class="n">h</span> <span class="o">&lt;</span> <span class="n">min_size</span> <span class="k">else</span> <span class="n">h</span>
+            <span class="n">ann</span><span class="p">[</span><span class="s1">&#39;bbox&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span> <span class="o">-</span> <span class="p">(</span><span class="n">nw</span> <span class="o">-</span> <span class="n">w</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span> <span class="n">y</span> <span class="o">-</span> <span class="p">(</span><span class="n">nh</span> <span class="o">-</span> <span class="n">h</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span> <span class="n">nw</span><span class="p">,</span> <span class="n">nh</span><span class="p">]</span>
+        <span class="n">new_annotations</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ann</span><span class="p">)</span>
+    <span class="n">coco</span><span class="p">[</span><span class="s1">&#39;annotations&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">new_annotations</span>
+
+    <span class="k">if</span> <span class="n">suffix</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">suffix</span> <span class="o">=</span> <span class="s1">&#39;.pad</span><span class="si">{}</span><span class="s1">_</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">min_size</span><span class="p">,</span> <span class="n">pad_size</span><span class="p">)</span>
+    <span class="n">out_file</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">coco_file</span><span class="p">)</span><span class="o">.</span><span class="n">with_suffix</span><span class="p">(</span><span class="s1">&#39;.json&#39;</span> <span class="o">+</span> <span class="n">suffix</span><span class="p">)</span>
+    <span class="n">io</span><span class="o">.</span><span class="n">save_json</span><span class="p">(</span><span class="n">coco</span><span class="p">,</span> <span class="n">out_file</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">out_file</span></div>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../../index.html">SimpleCV</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2020, szl.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.1.2</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

@@ -1,0 +1,155 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>simplecv.utils.translate &#8212; SimpleCV 0.1 documentation</title>
+    <link rel="stylesheet" href="../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <script id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+    <script src="../../../_static/jquery.js"></script>
+    <script src="../../../_static/underscore.js"></script>
+    <script src="../../../_static/doctools.js"></script>
+    <script src="../../../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+   
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for simplecv.utils.translate</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">Path</span>
+
+
+<div class="viewcode-block" id="get_val"><a class="viewcode-back" href="../../../simplecv.utils.html#simplecv.utils.translate.get_val">[docs]</a><span class="k">def</span> <span class="nf">get_val</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">val</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">data</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">data</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+    <span class="k">elif</span> <span class="s2">&quot;*&quot;</span> <span class="ow">in</span> <span class="n">data</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">data</span><span class="p">[</span><span class="s2">&quot;*&quot;</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">val</span></div>
+
+
+<div class="viewcode-block" id="guess_code_by_image"><a class="viewcode-back" href="../../../simplecv.utils.html#simplecv.utils.translate.guess_code_by_image">[docs]</a><span class="k">def</span> <span class="nf">guess_code_by_image</span><span class="p">(</span><span class="n">file_name</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">Path</span><span class="p">(</span><span class="n">file_name</span><span class="p">)</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">name</span></div>
+
+
+<div class="viewcode-block" id="guess_code_by_max_score"><a class="viewcode-back" href="../../../simplecv.utils.html#simplecv.utils.translate.guess_code_by_max_score">[docs]</a><span class="k">def</span> <span class="nf">guess_code_by_max_score</span><span class="p">(</span><span class="n">dt</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">dt</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">([</span><span class="n">d</span><span class="p">[</span><span class="s2">&quot;score&quot;</span><span class="p">]</span> <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">dt</span><span class="p">])]</span></div>
+
+
+<div class="viewcode-block" id="guess_code_by_complex"><a class="viewcode-back" href="../../../simplecv.utils.html#simplecv.utils.translate.guess_code_by_complex">[docs]</a><span class="k">def</span> <span class="nf">guess_code_by_complex</span><span class="p">(</span><span class="n">dt</span><span class="p">,</span> <span class="n">code_grade</span><span class="p">,</span> <span class="n">score_thr</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Above the threshold are sorted by priority, the same priority are selected with higher scores.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        dt (list): List of dict, keys `label` and `score` is required.</span>
+<span class="sd">        code_grade (dict): Such as `dict(CODE1=LVL1,CODE2=LVL2,...)`.</span>
+<span class="sd">        score_thr (dict): Such as `dict(CODE1=S1,CODE2=S2,...)`.</span>
+<span class="sd">    Returns:</span>
+<span class="sd">        A dict, the best code.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">ws</span> <span class="o">=</span> <span class="p">[</span><span class="n">get_val</span><span class="p">(</span><span class="n">code_grade</span><span class="p">,</span> <span class="n">d</span><span class="p">[</span><span class="s2">&quot;label&quot;</span><span class="p">],</span> <span class="mi">0</span><span class="p">)</span> <span class="k">if</span> <span class="n">d</span><span class="p">[</span><span class="s2">&quot;score&quot;</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="n">get_val</span><span class="p">(</span><span class="n">score_thr</span><span class="p">,</span> <span class="n">d</span><span class="p">[</span><span class="s2">&quot;label&quot;</span><span class="p">],</span> <span class="mi">0</span><span class="p">)</span> <span class="k">else</span> <span class="mi">0</span> <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">dt</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">dt</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">([</span><span class="n">w</span> <span class="o">+</span> <span class="n">d</span><span class="p">[</span><span class="s2">&quot;score&quot;</span><span class="p">]</span> <span class="k">for</span> <span class="n">w</span><span class="p">,</span> <span class="n">d</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">ws</span><span class="p">,</span> <span class="n">dt</span><span class="p">)])]</span></div>
+
+
+<div class="viewcode-block" id="trans_test_results"><a class="viewcode-back" href="../../../simplecv.utils.html#simplecv.utils.translate.trans_test_results">[docs]</a><span class="k">def</span> <span class="nf">trans_test_results</span><span class="p">(</span><span class="n">results</span><span class="p">,</span> <span class="n">guess_target</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">guess_predict</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Update `target` and `predict`, use important defect as image code.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        results (list): List of `(file_name, none, none, dt, gt)`.</span>
+<span class="sd">            Via `simplecv.mmdet_v1.test_net.test_coco()`.</span>
+<span class="sd">        target_code (function): Python funciton object, default is `None`.</span>
+<span class="sd">        predict_code (function): Python funciton object, default is `None`.</span>
+<span class="sd">    Returns:</span>
+<span class="sd">        Similar to results, list of `(file_name, target, predict, dt, gt)`.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">guess_target</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">guess_target</span> <span class="o">=</span> <span class="n">guess_code_by_image</span>
+    <span class="k">if</span> <span class="n">guess_predict</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">guess_predict</span> <span class="o">=</span> <span class="n">guess_code_by_max_score</span>
+    <span class="n">outputs</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">file_name</span><span class="p">,</span> <span class="n">target</span><span class="p">,</span> <span class="n">predict</span><span class="p">,</span> <span class="n">dt</span><span class="p">,</span> <span class="n">gt</span> <span class="ow">in</span> <span class="n">results</span><span class="p">:</span>
+        <span class="n">predict</span> <span class="o">=</span> <span class="n">guess_predict</span><span class="p">(</span><span class="n">dt</span><span class="p">)</span>
+        <span class="n">target</span> <span class="o">=</span> <span class="n">guess_target</span><span class="p">(</span><span class="n">file_name</span><span class="p">)</span>
+        <span class="n">outputs</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">file_name</span><span class="p">,</span> <span class="n">target</span><span class="p">,</span> <span class="n">predict</span><span class="p">,</span> <span class="n">dt</span><span class="p">,</span> <span class="n">gt</span><span class="p">])</span>
+    <span class="k">return</span> <span class="n">outputs</span></div>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../index.html">SimpleCV</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2020, szl.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.1.2</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>
