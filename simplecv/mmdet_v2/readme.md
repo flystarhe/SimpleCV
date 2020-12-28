@@ -59,9 +59,9 @@ os.environ["CFG_OPTIONS"] = """
 {
     "optimizer.lr":0.005,"lr_config.step":[16,22],"total_epochs":24,
     "evaluation.interval":12,"evaluation.metric":"bbox","log_config.interval":30,
-    "data.train":dict(img_prefix="data/coco/",ann_file="data/coco/annotations/train.json"),
-    "data.test":dict(img_prefix="data/coco/",ann_file="data/coco/annotations/test.json"),
-    "data.val":dict(img_prefix="data/coco/",ann_file="data/coco/annotations/val.json"),
+    "data.train":dict(img_prefix="data/coco/",ann_file="data/coco/annotations_100/train.json"),
+    "data.test":dict(img_prefix="data/coco/",ann_file="data/coco/annotations_100/test.json"),
+    "data.val":dict(img_prefix="data/coco/",ann_file="data/coco/annotations_100/val.json"),
     "data.samples_per_gpu":2,"data.workers_per_gpu":2,
     "model.neck.in_channels":[256,512,1024,2048],
     "model.neck.out_channels":256,
@@ -112,9 +112,9 @@ os.environ["CFG_OPTIONS"] = """
 {
     "optimizer.lr":0.0025,"lr_config.step":[16,22],"total_epochs":24,
     "evaluation.interval":12,"evaluation.metric":"bbox","log_config.interval":30,
-    "data.train":dict(img_prefix="data/coco/",ann_file="data/coco/annotations/train.json"),
-    "data.test":dict(img_prefix="data/coco/",ann_file="data/coco/annotations/test.json"),
-    "data.val":dict(img_prefix="data/coco/",ann_file="data/coco/annotations/val.json"),
+    "data.train":dict(img_prefix="data/coco/",ann_file="data/coco/annotations_100/train.json"),
+    "data.test":dict(img_prefix="data/coco/",ann_file="data/coco/annotations_100/test.json"),
+    "data.val":dict(img_prefix="data/coco/",ann_file="data/coco/annotations_100/val.json"),
     "data.samples_per_gpu":2,"data.workers_per_gpu":2,
     "model.neck.in_channels":[256,512,1024,2048],
     "model.neck.out_channels":256,
@@ -144,7 +144,7 @@ CHECKPOINT = "{}/epoch_{}.pth".format(WORK_DIR, 24)
 CONFIG = "{}/{}.py".format(WORK_DIR, CONFIG_NAME)
 
 MY_SCRIPT = "{}/simplecv/mmdet_v2/py_test.py".format(SIMPLECV_PATH)
-ARG_TEST = "{} {} {} {} --gpus 2".format(DATA_ROOT, "annotations/test.json", CONFIG, CHECKPOINT)
+ARG_TEST = "{} {} {} {} --gpus 2".format(DATA_ROOT, "annotations_100/test.json", CONFIG, CHECKPOINT)
 
 !PYTHONPATH={SIMPLECV_PATH}:{MMDET_PATH} python {MY_SCRIPT} {ARG_TEST}
 WORK_DIR

@@ -48,16 +48,22 @@ def get_group_id(ranks):
     return group_id
 
 
-def save_dataset(coco, image_ids, file_name):
+def save_dataset(coco, image_ids, file_name, single_cls=False):
     coco, image_ids = copy.deepcopy(coco), set(image_ids)
     coco["images"] = [img for img in coco["images"] if img["id"] in image_ids]
     coco["annotations"] = [ann for ann in coco["annotations"] if ann["image_id"] in image_ids]
+
+    if single_cls:
+        for ann in coco["annotations"]:
+            ann["category_id"] = 0
+        coco["categories"] = [dict(id=0, name="__FG", supercategory="")]
+
     file_name.parent.mkdir(parents=True, exist_ok=True)
     save_json(coco, file_name)
     return file_name
 
 
-def split_dataset(in_dir, seed=1, train_size=50):
+def split_dataset(in_dir, seed=1, train_size=50, single_cls=False):
     in_dir = Path(in_dir)
 
     coco = load_json(in_dir / "coco.json")
@@ -83,8 +89,9 @@ def split_dataset(in_dir, seed=1, train_size=50):
         data_train.extend(_data_train)
         data_val.extend(_data_val)
     data_test = list(set(data_train + data_val))
-    save_dataset(coco, data_train, in_dir / "annotations/train.json")
-    save_dataset(coco, data_test, in_dir / "annotations/test.json")
-    save_dataset(coco, data_val, in_dir / "annotations/val.json")
+    prefix = "{}_{}".format("single_cls" if single_cls else "annotations", seed)
+    save_dataset(coco, data_train, in_dir / "{}/train.json".format(prefix), single_cls)
+    save_dataset(coco, data_test, in_dir / "{}/test.json".format(prefix), single_cls)
+    save_dataset(coco, data_val, in_dir / "{}/val.json".format(prefix), single_cls)
     print("[selection] train/test/val: {}/{}/{}".format(len(data_train), len(data_test), len(data_val)))
     return data_train, data_val
