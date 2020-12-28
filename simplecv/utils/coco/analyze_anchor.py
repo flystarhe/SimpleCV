@@ -156,14 +156,27 @@ def plot_scale(anns):
     h_ratios_ = np.square(h_ratios)
     scales_ = np.log2(scales)
 
+    print("\nscales-vs-ratios")
     display(scales_, h_ratios_)
+
+    x_tmp = [1 for _ in scales_]
+    print("\nall-vs-scales")
+    display(x_tmp, scales_)
+
+    x_tmp = [1 for _ in h_ratios_]
+    print("\nall-vs-ratios")
+    display(x_tmp, h_ratios_)
 
     vals = sorted(set([a["label"] for a in anns]))
     mapping = {v: i for i, v in enumerate(vals, 1)}
     h_ratios_ = [mapping[a["label"]] for a in anns]
-    print("\nx-mapping", json.dumps(mapping, sort_keys=True))
 
+    print("\nscales-vs-categories", json.dumps(mapping, sort_keys=True))
     display(scales_, h_ratios_)
+
+    x_tmp = [1 for _ in h_ratios_]
+    print("\nall-vs-categories", json.dumps(mapping, sort_keys=True))
+    display(x_tmp, h_ratios_)
 
 
 def display(scales_, h_ratios_):
