@@ -95,11 +95,28 @@ DEL_FILES = " ".join(glob.glob(WORK_DIR + "/epoch_*")[:-2])
 WORK_DIR
 ```
 
->`"model":dict(pretrained="torchvision://resnet50",backbone=dict(type="ResNet",depth=50,out_indices=(0,1,2,3),frozen_stages=1))`
->`"model":dict(pretrained="torchvision://resnet101",backbone=dict(type="ResNet",depth=101,out_indices=(0,1,2,3),frozen_stages=1))`
->`"model":dict(pretrained="open-mmlab://resnext101_32x4d",backbone=dict(type="ResNeXt",depth=101,groups=32,base_width=4,num_stages=4,out_indices=(0,1,2,3),frozen_stages=1,norm_cfg=dict(type="BN",requires_grad=True),style="pytorch"))`
->`"model":dict(pretrained="open-mmlab://resnext101_64x4d",backbone=dict(type="ResNeXt",depth=101,groups=64,base_width=4,num_stages=4,out_indices=(0,1,2,3),frozen_stages=1,norm_cfg=dict(type="BN",requires_grad=True),style="pytorch"))`
->`lr = 0.01 / 8 * batch_size`, anchor scale range is `[14, 448]`.
+尝试不同主干网络：
+```
+"model":dict(pretrained="torchvision://resnet50",backbone=dict(type="ResNet",depth=50,out_indices=(0,1,2,3),frozen_stages=1)),
+"model":dict(pretrained="torchvision://resnet101",backbone=dict(type="ResNet",depth=101,out_indices=(0,1,2,3),frozen_stages=1)),
+"model":dict(pretrained="open-mmlab://resnext101_32x4d",backbone=dict(type="ResNeXt",depth=101,groups=32,base_width=4,num_stages=4,out_indices=(0,1,2,3),frozen_stages=1,norm_cfg=dict(type="BN",requires_grad=True),style="pytorch")),
+"model":dict(pretrained="open-mmlab://resnext101_64x4d",backbone=dict(type="ResNeXt",depth=101,groups=64,base_width=4,num_stages=4,out_indices=(0,1,2,3),frozen_stages=1,norm_cfg=dict(type="BN",requires_grad=True),style="pytorch")),
+# lr = 0.01 / 8 * batch_size, anchor scale range is [28, 448].
+```
+
+纵横比`ratios=h/s`异常时：
+```
+"model.rpn_head.anchor_generator.scales":[4,8],
+"train_cfg.rpn.assigner":dict(pos_iou_thr=0.7,neg_iou_thr=0.3,min_pos_iou=0.1,match_low_quality=True),
+"train_cfg.rcnn.assigner":dict(pos_iou_thr=0.5,neg_iou_thr=0.5,min_pos_iou=0.1,match_low_quality=True),
+# min_pos_iou = 1 / (2 * sqrt(ratios) - 1), scales = sqrt(ratios)
+```
+
+尝试不同损失函数/权重：
+```
+"model.roi_head.bbox_head.loss_cls":dict(type="FocalLoss",use_sigmoid=False,loss_weight=1.0),
+"model.roi_head.bbox_head.loss_bbox":dict(type="GIoULoss",loss_weight=1.0),
+```
 
 ### VarifocalNet
 ```
