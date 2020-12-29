@@ -109,7 +109,9 @@ WORK_DIR
 "model.rpn_head.anchor_generator.scales":[4,8],
 "train_cfg.rpn.assigner":dict(pos_iou_thr=0.7,neg_iou_thr=0.3,min_pos_iou=0.1,match_low_quality=True),
 "train_cfg.rcnn.assigner":dict(pos_iou_thr=0.5,neg_iou_thr=0.5,min_pos_iou=0.1,match_low_quality=True),
-# min_pos_iou = 1 / (2 * sqrt(ratios) - 1), scales = sqrt(ratios)
+# `max_iou_anchor_gt = 1 / (x + n -1)`, anchor shape `(x, x)`, gt shape `(1, nx)`, `x` in scales
+# `if x=8; max_iou = 1 / (7 + n); ratios(8,16,24) <- 1/8,1/9,1/10`
+# `if x=4; max_iou = 1 / (3 + n); ratios(4,8,12) <- 1/4,1/5,1/6`
 ```
 
 尝试不同损失函数/权重：
