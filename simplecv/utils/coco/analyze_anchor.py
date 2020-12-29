@@ -18,11 +18,17 @@ def show_line(title, values, labels, fmt="{}:{}"):
     print("{} -> {}".format(title, ", ".join(lst)))
 
 
-def norm(x):
+def norm(x, x_min=0, x_max=12):
     if x >= 1.0:
-        return int(x)
+        x = int(x)
     else:
-        return int(1.0 / (x + 1e-5))
+        x = int(-1.0 / x)
+
+    if x < x_min:
+        x = x_min
+    if x > x_max:
+        x = x_max
+    return x
 
 
 def grid(xs, ys):
@@ -181,8 +187,8 @@ def plot_scale(anns):
 
 
 def display(scales_, h_ratios_):
-    scales_ = [norm(s) for s in scales_]
-    h_ratios_ = [norm(r) for r in h_ratios_]
+    scales_ = [norm(s, 0, 12) for s in scales_]
+    h_ratios_ = [norm(r, -10, 10) for r in h_ratios_]
     data, row_labels, col_labels = grid(h_ratios_, scales_)
 
     fig, ax = plt.subplots(figsize=(16, 6))
