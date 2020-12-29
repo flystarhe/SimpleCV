@@ -152,8 +152,9 @@ def annotate_heatmap(im, data=None, valfmt="{x:.2f}", textcolors=["black", "whit
 def plot_scale(anns):
     boxes = np.array([a["bbox"] for a in anns])
     scales = np.sqrt(np.prod(boxes[:, 2:4], axis=1))
-    h_ratios = [h / s for h, s in zip(boxes[:, 3], scales)]
-    h_ratios_ = np.square(h_ratios)
+    h_ratios_ = [h / w for w, h in boxes[:, 2:]]
+    #h_ratios = [h / s for h, s in zip(boxes[:, 3], scales)]
+    #h_ratios_ = np.square(h_ratios)
     scales_ = np.log2(scales)
 
     print("\nscales-vs-ratios")
