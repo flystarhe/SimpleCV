@@ -10,15 +10,22 @@
 * Python: 3.7
 * PyTorch: 1.6.0
 * MMDET: `/usr/src/mmdetection`
-* SSH(dev): `ssh root@ip -p 9001`
-* Jupyter: `http://ip:9000/?token=hi`
+* [http://ip:9000/?token=hi](#) for `dev`
+* `/usr/sbin/sshd -D -p 9000` for `ssh` mode
+* `python /workspace/app_tornado.py 9000 ${@:2}` for `app` mode
 
 ```
-docker pull flystarhe/simplecv:mmdet2.7
-docker run --gpus all -d -p 9000:9000 -p 9001:9001 --ipc=host --name mmdet2 -v "$(pwd)":/workspace flystarhe/simplecv:mmdet2.7
+docker pull registry.cn-hangzhou.aliyuncs.com/flystarhe/containers:mmdet2.7
+docker tag registry.cn-hangzhou.aliyuncs.com/flystarhe/containers:mmdet2.7 simplecv:mmdet2.7
+
+docker save -o mmdet2.7-20.12.tar simplecv:mmdet2.7
+docker load -i mmdet2.7-20.12.tar
+
+docker run --gpus device=0 -d -p 9000:9000 --ipc=host --name test -v "$(pwd)":/workspace simplecv:mmdet2.7 [dev|ssh|app] \
+    /workspace/faster_rcnn_res1.py /workspace/epoch_48.pth 0.1 min
 ```
 
-`/workspace/(app_tornado.py + config.py + checkpoint.pth + [nms_thr:float] + [mode:str])`:
+`python /workspace/app_tornado.py 9000 config.py checkpoint.pth [nms_thr:float] [mode:str]`:
 ```python
 import requests
 
