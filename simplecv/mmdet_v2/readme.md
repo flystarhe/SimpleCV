@@ -78,7 +78,7 @@ os.environ["CFG_OPTIONS"] = """
     "model":dict(pretrained="torchvision://resnet50",backbone=dict(type="ResNet",depth=50,out_indices=(0,1,2,3),frozen_stages=1)),
     "train_cfg.rpn_proposal":dict(nms_across_levels=False,nms_pre=2000,nms_post=1000,max_num=1000,min_bbox_size=0),
     "test_cfg.rpn":dict(nms_across_levels=False,nms_pre=1000,nms_post=1000,max_num=1000,min_bbox_size=0),
-    "test_cfg.rcnn":dict(score_thr=0.05,max_per_img=100),
+    "test_cfg.rcnn":dict(score_thr=0.05,nms=dict(type="nms",iou_threshold=0.5),max_per_img=100),
 }
 """
 
@@ -106,9 +106,8 @@ WORK_DIR
 
 纵横比`ratios=h/s`异常时：
 ```
-"model.rpn_head.anchor_generator.scales":[4,8],
-"train_cfg.rpn.assigner":dict(pos_iou_thr=0.7,neg_iou_thr=0.3,min_pos_iou=0.1,match_low_quality=True),
-"train_cfg.rcnn.assigner":dict(pos_iou_thr=0.5,neg_iou_thr=0.5,min_pos_iou=0.1,match_low_quality=True),
+"train_cfg.rpn.assigner":dict(pos_iou_thr=0.7,neg_iou_thr=0.1,min_pos_iou=0.1,match_low_quality=True),
+"train_cfg.rcnn.assigner":dict(pos_iou_thr=0.5,neg_iou_thr=0.3,min_pos_iou=0.3,match_low_quality=True),
 # `max_iou_anchor_gt = 1 / (x + n -1)`, anchor shape `(x, x)`, gt shape `(1, nx)`, `x` in scales
 # `if x=8; max_iou = 1 / (7 + n); ratios(8,16,24) <- 1/8,1/9,1/10`
 # `if x=4; max_iou = 1 / (3 + n); ratios(4,8,12) <- 1/4,1/5,1/6`

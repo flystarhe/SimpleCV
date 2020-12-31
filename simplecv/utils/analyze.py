@@ -1,6 +1,8 @@
 import os
+import shutil
 
 import numpy as np
+from collections import defaultdict
 from pathlib import Path
 from sklearn.metrics import confusion_matrix
 
@@ -19,6 +21,17 @@ def get_val(data, key, val=None):
         return val
 
 
+def gen_multi_labels(anns, simple=True):
+    cache = defaultdict(list)
+    for ann in anns:
+        cache[ann["label"]].append(ann)
+
+    best_result = [max(v, key=lambda x: x["score"]) for v in cache.values()]
+    if simple:
+        best_result = [best["label"] for best in best_result]
+    return best_result
+
+
 def list2str(lst, fmt="{}"):
     return ",".join([fmt.format(i) for i in lst])
 
@@ -26,7 +39,6 @@ def list2str(lst, fmt="{}"):
 def format_confusion_matrix(y_true, y_pred, labels, title):
     labels = sorted(set(labels + y_true + y_pred))
     table_data = confusion_matrix(y_true, y_pred, labels=labels)
-    n_good, n_total = table_data.diagonal().sum(), table_data.sum()
 
     lines = []
     pr_p, pr_r = [], []
@@ -37,7 +49,14 @@ def format_confusion_matrix(y_true, y_pred, labels, title):
         pr_p.append("{:.2f}%".format(table_data[i, i] / csum * 100 if csum > 0 else 0))
         pr_r.append("{:.2f}%".format(table_data[i, i] / rsum * 100 if rsum > 0 else 0))
     lines.append("{},".format("P(%)") + list2str(pr_p) + "\n{},".format("R(%)") + list2str(pr_r))
+
+    n_good, n_total = table_data.diagonal().sum(), table_data.sum()
     lines.append("good,{},total,{},good/total,{:.2f}%".format(n_good, n_total, n_good / n_total * 100))
+
+    if len(labels) > 1:
+        table_data = table_data[:-1, :-1]
+        n_good, n_total = table_data.diagonal().sum(), table_data.sum()
+        lines.append("good,{},total,{},good/total,{:.2f}%".format(n_good, n_total, n_good / n_total * 100))
     return lines
 
 
@@ -56,17 +75,17 @@ def matrix_analysis_object(results, score_thr, out_file=None, **kwargs):
     clean_mode = kwargs.get("clean_mode", "min")
     match_mode = kwargs.get("match_mode", "iou")
     pos_iou_thr = kwargs.get("pos_iou_thr", 0.3)
-    min_pos_iou = kwargs.get("min_pos_iou", pos_iou_thr - 0.1)
+    min_pos_iou = kwargs.get("min_pos_iou", 0.1)
 
     y_true, y_pred = [], []
-    n_dt, n_dt_match, n_gt, n_gt_match = 0, 0, 0, 0
+    n_dt, n_gt, n_hard, n_missed, n_false_pos = 0, 0, 0, 0, 0
     bads_tail = ["file_name,dt,gt,hard,missed,false_pos"]
     for file_name, _, _, dt, gt in results:
         dt = [d for d in dt if d["score"] >= get_val(score_thr, d["label"], 0.3)]
         dt = nms.clean_by_bbox(dt, nms_thr=nms_thr, mode=clean_mode)
         ious = nms.bbox_overlaps(dt, gt, mode=match_mode)
 
-        n_hard = 0
+        i_hard = 0
         exclude_i = set()
         exclude_j = set()
         if ious is not None:
@@ -78,7 +97,7 @@ def matrix_analysis_object(results, score_thr, out_file=None, **kwargs):
                     y_true.append(g_label)
                     exclude_i.add(i)
                     if d_label != g_label:
-                        n_hard += 1
+                        i_hard += 1
 
             for j, i in enumerate(ious.argmax(axis=0)):
                 if ious[i, j] >= min_pos_iou:
@@ -86,30 +105,30 @@ def matrix_analysis_object(results, score_thr, out_file=None, **kwargs):
         # for i, j in zip(*np.where(ious >= min_pos_iou))-- fast
         # for i, j in np.argwhere(ious >= min_pos_iou) -- is slow
 
-        n_false_pos = 0
+        i_false_pos = 0
         for i in range(len(dt)):
             if i not in exclude_i:
                 d_label = dt[i]["label"]
                 y_pred.append(d_label)
                 y_true.append("none")
-                n_false_pos += 1
+                i_false_pos += 1
 
-        n_missed = 0
+        i_missed = 0
         for j in range(len(gt)):
             if j not in exclude_j:
                 g_label = gt[j]["label"]
                 y_pred.append("none")
                 y_true.append(g_label)
-                n_missed += 1
+                i_missed += 1
 
-        n_dt, n_dt_match = n_dt + len(dt), n_dt_match + len(exclude_i)
-        n_gt, n_gt_match = n_gt + len(gt), n_gt_match + len(exclude_j)
-        bads_tail.append("{},{},{},{},{},{}".format(file_name, len(dt), len(gt), n_hard, n_missed, n_false_pos))
+        bads_tail.append("{},{},{},{},{},{}".format(
+            file_name, len(dt), len(gt), i_hard, i_missed, i_false_pos))
 
-    n_missed = sum([1 for a, b in zip(y_pred, y_true) if a == "none"])
-    n_false_pos = sum([1 for a, b in zip(y_pred, y_true) if b == "none"])
-    title = "{}\nCM[object]\ngt,{}\ndt,{}\ngt_match,{}\ndt_match,{}\nmissed,{}\nfalse_pos,{}".format(
-        out_file, n_gt, n_dt, n_gt_match, n_dt_match, n_missed, n_false_pos)
+        n_dt, n_gt = n_dt + len(dt), n_gt + len(gt)
+        n_hard, n_missed, n_false_pos = n_hard + i_hard, n_missed + i_missed, n_false_pos + i_false_pos
+
+    title = "{}\nCM[object]\ndt,{}\ngt,{}\nhard,{}\nmissed,{}\nfalse_pos,{}".format(
+        out_file, n_dt, n_gt, n_hard, n_missed, n_false_pos)
     lines = format_confusion_matrix(y_true, y_pred, [], title)
     if out_file is not None:
         io.save_csv(lines + bads_tail, out_file)
@@ -117,7 +136,7 @@ def matrix_analysis_object(results, score_thr, out_file=None, **kwargs):
     return bads_tail[1:]
 
 
-def matrix_analysis_image(results, score_thr, out_file=None):
+def matrix_analysis_image(results, score_thr, out_file=None, **kwargs):
     """Matrix analysis by image.
 
     Args:
@@ -128,18 +147,57 @@ def matrix_analysis_image(results, score_thr, out_file=None):
     Returns:
         lines (list): List of CSV lines.
     """
+    single_cls = kwargs.get("single_cls", True)
+    assert not single_cls or results[0][1] is not None
+
     y_true, y_pred = [], []
-    for _, target, predict, _, _ in results:
-        if predict["score"] >= get_val(score_thr, predict["label"], 0.3):
-            y_pred.append(predict["label"])
-            y_true.append(target)
-    n_total, n_cover = len(results), len(y_true)
-    title = "{}\nCM[image]\ntotal,{}\ncover,{}\nsay {:.2f}%".format(out_file, n_total, n_cover, n_cover / n_total * 100)
+    n_dt, n_gt, n_hard, n_missed, n_false_pos = 0, 0, 0, 0, 0
+    bads_tail = ["file_name,dt,gt,hard,missed,false_pos"]
+    for file_name, target, predict, dt, gt in results:
+        dt = [d for d in dt if d["score"] >= get_val(score_thr, d["label"], 0.3)]
+
+        if single_cls:
+            flag = predict["score"] >= get_val(score_thr, predict["label"], 0.3)
+            dt_label = predict["label"] if flag else "none"
+            gt_label = target if gt else "none"
+            excluded = set(["none"])
+
+            dt_labels = set([dt_label]) - excluded
+            gt_labels = set([gt_label]) - excluded
+        else:
+            dt_labels = set(gen_multi_labels(dt))
+            gt_labels = set(gen_multi_labels(gt))
+
+        for label in (dt_labels & gt_labels):
+            y_pred.append(label)
+            y_true.append(label)
+
+        i_false_pos = 0
+        for label in (dt_labels - gt_labels):
+            y_pred.append(label)
+            y_true.append("none")
+            i_false_pos += 1
+
+        i_missed = 0
+        for label in (gt_labels - dt_labels):
+            y_pred.append("none")
+            y_true.append(label)
+            i_missed += 1
+
+        i_hard = 1 if i_missed > 0 and i_false_pos > 0 else 0
+        bads_tail.append("{},{},{},{},{},{}".format(
+            file_name, len(dt_labels), len(gt_labels), i_hard, i_missed, i_false_pos))
+
+        n_dt, n_gt = n_dt + len(dt_labels), n_gt + len(gt_labels)
+        n_hard, n_missed, n_false_pos = n_hard + i_hard, n_missed + i_missed, n_false_pos + i_false_pos
+
+    title = "{}\nCM[image]\ndt,{}\ngt,{}\nhard,{}\nmissed,{}\nfalse_pos,{}".format(
+        out_file, n_dt, n_gt, n_hard, n_missed, n_false_pos)
     lines = format_confusion_matrix(y_true, y_pred, [], title)
     if out_file is not None:
-        io.save_csv(lines, out_file)
+        io.save_csv(lines + bads_tail, out_file)
     print("\n".join(lines))
-    return lines
+    return bads_tail[1:]
 
 
 def display_dataset(results, score_thr, output_dir, simple=False, **kwargs):
@@ -210,4 +268,8 @@ def display_hardmini(results, score_thr, output_dir, simple=True, **kwargs):
         if ss:
             out_dirs = [os.path.join(output_dir, s) for s in ss]
             viz.image_show(out_dirs, file_name, dt, gt, None, None)
+
+            ann_path = Path(file_name).with_suffix(".json")
+            for out_dir in out_dirs:
+                shutil.copyfile(ann_path, os.path.join(out_dir, ann_path.name))
     return str(output_dir)
