@@ -48,14 +48,14 @@ def bbox_overlaps(dt, gt=None, mode="iou"):
     return ious.numpy()
 
 
-def _clean_with_iou(dt, nms_thr=0.3, mode="min"):
+def _clean_with_iou(dt, thr=0.3, mode="min"):
     ious = bbox_overlaps(dt, None, mode)
 
     if ious is None:
         return dt
 
     nodes = list(range(ious.shape[0]))
-    lines = np.argwhere(ious >= nms_thr).tolist()
+    lines = np.argwhere(ious >= thr).tolist()
 
     dt_ = []
     for i_set in clustering(nodes, lines):
@@ -70,7 +70,7 @@ def _clean_with_iou(dt, nms_thr=0.3, mode="min"):
     return dt_
 
 
-def clean_by_bbox(dt, nms_thr=0.3, mode="min"):
+def clean_by_bbox(dt, thr=0.3, mode="min"):
     cache = defaultdict(list)
 
     for d in dt:
@@ -78,5 +78,5 @@ def clean_by_bbox(dt, nms_thr=0.3, mode="min"):
 
     dt_ = []
     for _, vals in cache.items():
-        dt_.extend(_clean_with_iou(vals, nms_thr, mode))
+        dt_.extend(_clean_with_iou(vals, thr, mode))
     return dt_

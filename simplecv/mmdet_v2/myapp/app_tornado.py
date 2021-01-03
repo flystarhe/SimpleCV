@@ -85,7 +85,7 @@ class Cache(object):
 model = None
 classes = None
 cached = Cache()
-clean_nms_thr = 0.1
+clean_thr = 0.1
 clean_mode = "min"
 
 
@@ -94,7 +94,7 @@ class MainHandler(tornado.web.RequestHandler):
     def get(self):
         try:
             global model, classes
-            global clean_nms_thr, clean_mode
+            global clean_thr, clean_mode
             image_path = self.get_argument("image")
             result = inference_detector(model, image_path)
             if isinstance(result, tuple):
@@ -106,7 +106,7 @@ class MainHandler(tornado.web.RequestHandler):
             for bbox_, code_ in zip(bboxes, classes):
                 dt.extend(bboxes2dt(bbox_, code_))
 
-            dt = clean_by_bbox(dt, clean_nms_thr, clean_mode)
+            dt = clean_by_bbox(dt, clean_thr, clean_mode)
             data = [d["xyxy"] + [d["label"], d["score"]] for d in dt]
             res = {"status": 0, "time": int(time.time()), "data": data}
         except Exception:
@@ -135,7 +135,7 @@ if __name__ == "__main__":
     classes = model.CLASSES
 
     if len(sys.argv) == 6:
-        clean_nms_thr, clean_mode = float(sys.argv[4]), sys.argv[5]
+        clean_thr, clean_mode = float(sys.argv[4]), sys.argv[5]
 
     cached.add(argv=sys.argv)
 

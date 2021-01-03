@@ -15,10 +15,9 @@ from simplecv.utils import visualize as viz
 def get_val(data, key, val=None):
     if key in data:
         return data[key]
-    elif "*" in data:
+    if "*" in data:
         return data["*"]
-    else:
-        return val
+    return val
 
 
 def gen_multi_labels(anns, simple=True):
@@ -30,6 +29,10 @@ def gen_multi_labels(anns, simple=True):
     if simple:
         best_result = [best["label"] for best in best_result]
     return best_result
+
+
+def agent_split():
+    np.quantile([1], [0.1, ])
 
 
 def list2str(lst, fmt="{}"):
@@ -71,39 +74,56 @@ def matrix_analysis_object(results, score_thr, out_file=None, **kwargs):
     Returns:
         lines (list): List of CSV lines.
     """
-    nms_thr = kwargs.get("nms_thr", 0.3)
+    clean_thr = kwargs.get("clean_thr", 0.5)
     clean_mode = kwargs.get("clean_mode", "min")
     match_mode = kwargs.get("match_mode", "iou")
     pos_iou_thr = kwargs.get("pos_iou_thr", 0.3)
-    min_pos_iou = kwargs.get("min_pos_iou", 0.1)
+    min_pos_iou = kwargs.get("min_pos_iou", 0.01)
+
+    score_missed = defaultdict(list)
+    score_false_pos = defaultdict(list)
 
     y_true, y_pred = [], []
-    n_dt, n_gt, n_hard, n_missed, n_false_pos = 0, 0, 0, 0, 0
     bads_tail = ["file_name,dt,gt,hard,missed,false_pos"]
+    n_dt, n_gt, n_hard, n_missed, n_false_pos = 0, 0, 0, 0, 0
     for file_name, _, _, dt, gt in results:
-        dt = [d for d in dt if d["score"] >= get_val(score_thr, d["label"], 0.3)]
-        dt = nms.clean_by_bbox(dt, nms_thr=nms_thr, mode=clean_mode)
-        ious = nms.bbox_overlaps(dt, gt, mode=match_mode)
+        dt = nms.clean_by_bbox(dt, clean_thr, clean_mode)
+        ious = nms.bbox_overlaps(dt, gt, match_mode)
 
         i_hard = 0
         exclude_i = set()
         exclude_j = set()
         if ious is not None:
             for i, j in enumerate(ious.argmax(axis=1)):
+                d_label = dt[i]["label"]
+                d_score = dt[i]["score"]
+                g_label = gt[j]["label"]
+
                 if ious[i, j] >= pos_iou_thr:
-                    d_label = dt[i]["label"]
-                    g_label = gt[j]["label"]
-                    y_pred.append(d_label)
-                    y_true.append(g_label)
-                    exclude_i.add(i)
+                    if d_score >= get_val(score_thr, d_label, 0.3):
+                        y_pred.append(d_label)
+                        y_true.append(g_label)
+                        if d_label == g_label:
+                            exclude_i.add(i)
+                        else:
+                            i_hard += 1
                     if d_label != g_label:
-                        i_hard += 1
+                        score_false_pos[d_albel].append(d_score)
+                else:
+                    score_false_pos[d_albel].append(d_score)
 
             for j, i in enumerate(ious.argmax(axis=0)):
+                d_label = dt[i]["label"]
+                d_score = dt[i]["score"]
+                g_label = gt[j]["label"]
+
                 if ious[i, j] >= min_pos_iou:
-                    exclude_j.add(j)
-        # for i, j in zip(*np.where(ious >= min_pos_iou))-- fast
-        # for i, j in np.argwhere(ious >= min_pos_iou) -- is slow
+                    if d_score >= get_val(score_thr, d_label, 0.3):
+                        exclude_j.add(j)
+                    else:
+                        score_missed[d_label].append(d_score)
+                else:
+                    score_missed[g_label].append(0.001)
 
         i_false_pos = 0
         for i in range(len(dt)):
@@ -148,11 +168,12 @@ def matrix_analysis_image(results, score_thr, out_file=None, **kwargs):
         lines (list): List of CSV lines.
     """
     single_cls = kwargs.get("single_cls", True)
+
     assert not single_cls or results[0][1] is not None
 
     y_true, y_pred = [], []
-    n_dt, n_gt, n_hard, n_missed, n_false_pos = 0, 0, 0, 0, 0
     bads_tail = ["file_name,dt,gt,hard,missed,false_pos"]
+    n_dt, n_gt, n_hard, n_missed, n_false_pos = 0, 0, 0, 0, 0
     for file_name, target, predict, dt, gt in results:
         dt = [d for d in dt if d["score"] >= get_val(score_thr, d["label"], 0.3)]
 
@@ -213,7 +234,7 @@ def display_dataset(results, score_thr, output_dir, simple=False, **kwargs):
     Returns:
         None.
     """
-    nms_thr = kwargs.get("nms_thr", 0.3)
+    clean_thr = kwargs.get("clean_thr", 0.5)
     clean_mode = kwargs.get("clean_mode", "min")
     output_dir = increment_path(output_dir, exist_ok=False)
 
@@ -223,7 +244,7 @@ def display_dataset(results, score_thr, output_dir, simple=False, **kwargs):
     for file_name, _, _, dt, gt in results:
         dt = [d for d in dt if d["score"] >= get_val(score_thr, d["label"], 0.3)]
         if simple:
-            dt = nms.clean_by_bbox(dt, nms_thr=nms_thr, mode=clean_mode)
+            dt = nms.clean_by_bbox(dt, clean_thr, clean_mode)
 
         viz.image_show([os.path.join(output_dir, "images-pred")], file_name, dt, gt, None, None)
     return str(output_dir)
@@ -243,7 +264,7 @@ def display_hardmini(results, score_thr, output_dir, simple=True, **kwargs):
         None.
     """
     show = kwargs.get("show", False)
-    nms_thr = kwargs.get("nms_thr", 0.3)
+    clean_thr = kwargs.get("clean_thr", 0.5)
     clean_mode = kwargs.get("clean_mode", "min")
     output_dir = increment_path(output_dir, exist_ok=False)
 
@@ -259,7 +280,7 @@ def display_hardmini(results, score_thr, output_dir, simple=True, **kwargs):
     for (file_name, _, _, dt, gt), line in zip(results, bads_tail):
         dt = [d for d in dt if d["score"] >= get_val(score_thr, d["label"], 0.3)]
         if simple:
-            dt = nms.clean_by_bbox(dt, nms_thr=nms_thr, mode=clean_mode)
+            dt = nms.clean_by_bbox(dt, clean_thr, clean_mode)
 
         tt = line.split(",")[-3:]
         ss = ["hard", "missed", "false_pos"]
