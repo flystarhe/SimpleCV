@@ -85,7 +85,7 @@ class Cache(object):
 model = None
 classes = None
 cached = Cache()
-clean_thr = 0.1
+clean_thr = 0.01
 clean_mode = "min"
 
 

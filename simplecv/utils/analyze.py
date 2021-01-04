@@ -71,11 +71,11 @@ def format_missed_false_pos(total_gt, total_pos, score_missed, score_false_pos, 
     lines = []
     if isinstance(q, int):
         q = [i / q for i in range(1, q)]
-    lines.append("\nGROUP,{},{},{},".format("LABEL", "TOTAL", "FOCUS") + list2str(q, "{:.2f}"))
 
     for label in labels:
         i_missed, q_missed = agent_split(score_missed[label], q)
         i_false_pos, q_false_pos = agent_split(score_false_pos[label], q)
+        lines.append("\nGROUP,{},{},{},".format("LABEL", "TOTAL", "FOCUS") + list2str(q, "{:.2f}"))
         lines.append("GT,{},{},{},".format(label, total_gt[label], i_missed) + list2str(q_missed, "{:.2f}"))
         lines.append("POS,{},{},{},".format(label, total_pos[label], i_false_pos) + list2str(q_false_pos, "{:.2f}"))
     return lines
@@ -95,7 +95,7 @@ def matrix_analysis_object(results, score_thr, out_file=None, **kwargs):
     clean_thr = kwargs.get("clean_thr", 0.5)
     clean_mode = kwargs.get("clean_mode", "min")
     match_mode = kwargs.get("match_mode", "iou")
-    pos_iou_thr = kwargs.get("pos_iou_thr", 0.3)
+    pos_iou_thr = kwargs.get("pos_iou_thr", 0.1)
     min_pos_iou = kwargs.get("min_pos_iou", 0.01)
 
     total_gt = defaultdict(int)
