@@ -1,3 +1,4 @@
+import copy
 import torch
 import numpy as np
 import networkx as nx
@@ -72,6 +73,7 @@ def _clean_with_iou(dt, thr=0.3, mode="min"):
 
 def clean_by_bbox(dt, thr=0.3, mode="min"):
     cache = defaultdict(list)
+    dt = copy.deepcopy(dt)
 
     for d in dt:
         cache[d["label"]].append(d)
