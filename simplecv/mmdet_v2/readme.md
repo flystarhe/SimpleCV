@@ -25,7 +25,7 @@ docker run --gpus device=0 -d -p 9000:9000 --ipc=host --name test -v "$(pwd)":/w
     /workspace/faster_rcnn_res1.py /workspace/epoch_48.pth 0.1 min
 ```
 
-`python /workspace/app_tornado.py 9000 config.py checkpoint.pth [nms_thr:float] [mode:str]`:
+`python /workspace/app_tornado.py 9000 config.py checkpoint.pth [thr:float] [mode:str]`:
 ```python
 import requests
 
@@ -238,6 +238,6 @@ from simplecv.utils.analyze import display_hardmini
 pkl_file = "xxxx"
 score_thr = {"*": 0.3}
 output_dir = str(Path(pkl_file).parent) + "-viz"
-kwargs = dict(show=False, nms_thr=0.5, clean_mode="min", match_mode="iou", pos_iou_thr=0.1, min_pos_iou=1e-2)
+kwargs = dict(show=False, clean_thr=0.5, clean_mode="min", match_mode="iou", pos_iou_thr=0.1, min_pos_iou=1e-2)
 display_hardmini(pkl_file, score_thr, output_dir, simple=True, **kwargs)
 ```
