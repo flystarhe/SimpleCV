@@ -31,8 +31,10 @@ def gen_multi_labels(anns, simple=True):
     return best_result
 
 
-def agent_split():
-    np.quantile([1], [0.1, ])
+def agent_split(x, q):
+    if len(x) == 0:
+        return 0, [0 for _ in q]
+    return len(x), np.quantile(x, q)
 
 
 def list2str(lst, fmt="{}"):
@@ -63,6 +65,22 @@ def format_confusion_matrix(y_true, y_pred, labels, title):
     return lines
 
 
+def format_missed_false_pos(total_gt, total_pos, score_missed, score_false_pos, q=20):
+    labels = sorted(set(list(total_gt.keys()) + list(total_pos.keys())))
+
+    lines = []
+    if isinstance(q, int):
+        q = [i / q for i in range(1, q)]
+    lines.append("\nGROUP,{},{},{},".format("LABEL", "TOTAL", "FOCUS") + list2str(q, "{:.2f}"))
+
+    for label in labels:
+        i_missed, q_missed = agent_split(score_missed[label], q)
+        i_false_pos, q_false_pos = agent_split(score_false_pos[label], q)
+        lines.append("GT,{},{},{},".format(label, total_gt[label], i_missed) + list2str(q_missed, "{:.2f}"))
+        lines.append("POS,{},{},{},".format(label, total_pos[label], i_false_pos) + list2str(q_false_pos, "{:.2f}"))
+    return lines
+
+
 def matrix_analysis_object(results, score_thr, out_file=None, **kwargs):
     """Matrix analysis by object.
 
@@ -80,11 +98,13 @@ def matrix_analysis_object(results, score_thr, out_file=None, **kwargs):
     pos_iou_thr = kwargs.get("pos_iou_thr", 0.3)
     min_pos_iou = kwargs.get("min_pos_iou", 0.01)
 
+    total_gt = defaultdict(int)
+    total_pos = defaultdict(int)
     score_missed = defaultdict(list)
     score_false_pos = defaultdict(list)
 
     y_true, y_pred = [], []
-    bads_tail = ["file_name,dt,gt,hard,missed,false_pos"]
+    bads_tail = ["\nfile_name,dt,gt,hard,missed,false_pos"]
     n_dt, n_gt, n_hard, n_missed, n_false_pos = 0, 0, 0, 0, 0
     for file_name, _, _, dt, gt in results:
         dt = nms.clean_by_bbox(dt, clean_thr, clean_mode)
@@ -98,24 +118,25 @@ def matrix_analysis_object(results, score_thr, out_file=None, **kwargs):
                 d_label = dt[i]["label"]
                 d_score = dt[i]["score"]
                 g_label = gt[j]["label"]
+                total_pos[d_label] += 1
 
                 if ious[i, j] >= pos_iou_thr:
                     if d_score >= get_val(score_thr, d_label, 0.3):
+                        exclude_i.add(i)
                         y_pred.append(d_label)
                         y_true.append(g_label)
-                        if d_label == g_label:
-                            exclude_i.add(i)
-                        else:
+                        if d_label != g_label:
                             i_hard += 1
                     if d_label != g_label:
-                        score_false_pos[d_albel].append(d_score)
+                        score_false_pos[d_label].append(d_score)
                 else:
-                    score_false_pos[d_albel].append(d_score)
+                    score_false_pos[d_label].append(d_score)
 
             for j, i in enumerate(ious.argmax(axis=0)):
                 d_label = dt[i]["label"]
                 d_score = dt[i]["score"]
                 g_label = gt[j]["label"]
+                total_gt[g_label] += 1
 
                 if ious[i, j] >= min_pos_iou:
                     if d_score >= get_val(score_thr, d_label, 0.3):
@@ -123,33 +144,33 @@ def matrix_analysis_object(results, score_thr, out_file=None, **kwargs):
                     else:
                         score_missed[d_label].append(d_score)
                 else:
-                    score_missed[g_label].append(0.001)
+                    score_missed[g_label].append(0.0)
 
         i_false_pos = 0
-        for i in range(len(dt)):
+        for i, d in enumerate(dt):
             if i not in exclude_i:
-                d_label = dt[i]["label"]
-                y_pred.append(d_label)
+                y_pred.append(d["label"])
                 y_true.append("none")
                 i_false_pos += 1
 
         i_missed = 0
-        for j in range(len(gt)):
+        for j, g in enumerate(gt):
             if j not in exclude_j:
-                g_label = gt[j]["label"]
                 y_pred.append("none")
-                y_true.append(g_label)
+                y_true.append(g["label"])
                 i_missed += 1
 
+        i_dt, i_gt = len(dt), len(gt)
         bads_tail.append("{},{},{},{},{},{}".format(
-            file_name, len(dt), len(gt), i_hard, i_missed, i_false_pos))
+            file_name, i_dt, i_gt, i_hard, i_missed, i_false_pos))
 
-        n_dt, n_gt = n_dt + len(dt), n_gt + len(gt)
+        n_dt, n_gt = n_dt + i_dt, n_gt + i_gt
         n_hard, n_missed, n_false_pos = n_hard + i_hard, n_missed + i_missed, n_false_pos + i_false_pos
 
     title = "{}\nCM[object]\ndt,{}\ngt,{}\nhard,{}\nmissed,{}\nfalse_pos,{}".format(
         out_file, n_dt, n_gt, n_hard, n_missed, n_false_pos)
     lines = format_confusion_matrix(y_true, y_pred, [], title)
+    lines += format_missed_false_pos(total_gt, total_pos, score_missed, score_false_pos)
     if out_file is not None:
         io.save_csv(lines + bads_tail, out_file)
     print("\n".join(lines))
@@ -172,7 +193,7 @@ def matrix_analysis_image(results, score_thr, out_file=None, **kwargs):
     assert not single_cls or results[0][1] is not None
 
     y_true, y_pred = [], []
-    bads_tail = ["file_name,dt,gt,hard,missed,false_pos"]
+    bads_tail = ["\nfile_name,dt,gt,hard,missed,false_pos"]
     n_dt, n_gt, n_hard, n_missed, n_false_pos = 0, 0, 0, 0, 0
     for file_name, target, predict, dt, gt in results:
         dt = [d for d in dt if d["score"] >= get_val(score_thr, d["label"], 0.3)]
@@ -205,11 +226,12 @@ def matrix_analysis_image(results, score_thr, out_file=None, **kwargs):
             y_true.append(label)
             i_missed += 1
 
+        i_dt, i_gt = len(dt_labels), len(gt_labels)
         i_hard = 1 if i_missed > 0 and i_false_pos > 0 else 0
         bads_tail.append("{},{},{},{},{},{}".format(
-            file_name, len(dt_labels), len(gt_labels), i_hard, i_missed, i_false_pos))
+            file_name, i_dt, i_gt, i_hard, i_missed, i_false_pos))
 
-        n_dt, n_gt = n_dt + len(dt_labels), n_gt + len(gt_labels)
+        n_dt, n_gt = n_dt + i_dt, n_gt + i_gt
         n_hard, n_missed, n_false_pos = n_hard + i_hard, n_missed + i_missed, n_false_pos + i_false_pos
 
     title = "{}\nCM[image]\ndt,{}\ngt,{}\nhard,{}\nmissed,{}\nfalse_pos,{}".format(

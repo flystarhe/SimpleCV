@@ -160,8 +160,8 @@ def test_coco(data_root, coco_file, config, checkpoint, gpus=4):
             dt.extend(bboxes2anns(bbox_, code_))
         outputs.append((file_name, None, None, dt, gt))
     kwargs = dict(clean_thr=0.1, clean_mode="min", match_mode="iou", pos_iou_thr=0.1, min_pos_iou=1e-2)
-    matrix_analysis_image(outputs, {"*": 0.3}, single_cls=False)
-    matrix_analysis_object(outputs, {"*": 0.3}, **kwargs)
+    matrix_analysis_image(outputs, {"*": 0.3}, temp_file + ".image.csv", single_cls=False)
+    matrix_analysis_object(outputs, {"*": 0.3}, temp_file + ".object.csv", **kwargs)
     return io.save_pkl(outputs, temp_file)
 
 
