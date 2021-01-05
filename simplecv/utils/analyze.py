@@ -96,7 +96,7 @@ def matrix_analysis_object(results, score_thr, out_file=None, **kwargs):
     clean_mode = kwargs.get("clean_mode", "min")
     match_mode = kwargs.get("match_mode", "iou")
     pos_iou_thr = kwargs.get("pos_iou_thr", 0.1)
-    min_pos_iou = kwargs.get("min_pos_iou", 1e-5)
+    min_pos_iou = kwargs.get("min_pos_iou", 1e-3)
 
     total_gt = defaultdict(int)
     total_pos = defaultdict(int)

@@ -248,6 +248,6 @@ from simplecv.utils.analyze import display_hardmini
 pkl_file = "xxxx"
 score_thr = {"*": 0.3}
 output_dir = str(Path(pkl_file).parent) + "-viz"
-kwargs = dict(show=False, clean_thr=0.3, clean_mode="min", match_mode="iou", pos_iou_thr=0.1, min_pos_iou=1e-5)
+kwargs = dict(show=False, clean_thr=0.3, clean_mode="min", match_mode="iou", pos_iou_thr=0.1, min_pos_iou=1e-3)
 display_hardmini(pkl_file, score_thr, output_dir, simple=True, **kwargs)
 ```
