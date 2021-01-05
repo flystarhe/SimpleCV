@@ -57,14 +57,15 @@ EXPERIMENT_NAME
 
 ## train
 ```
-FLAG = "lr_x1_epochs_24"
+FLAG = "lr_1x_epochs_1x"
 CONFIG_NAME = "faster_rcnn_res1"
 DATA_ROOT = "/workspace/notebooks/data_xxxx_coco"
 !mkdir -p data && rm -rf data/coco && ln -s {DATA_ROOT} data/coco
 
 os.environ["CFG_OPTIONS"] = """
 {
-    "optimizer.lr":0.005,"lr_config.step":[16,22],"total_epochs":24,
+    "optimizer.lr":0.005,"total_epochs":12,
+    "lr_config":dict(_delete_=True,policy="step",warmup="linear",warmup_iters=500,warmup_ratio=0.001,step=[8,11]),
     "evaluation.interval":12,"evaluation.metric":"bbox","log_config.interval":30,
     "data.train":dict(img_prefix="data/coco/",ann_file="data/coco/annotations_100/train.json"),
     "data.test":dict(img_prefix="data/coco/",ann_file="data/coco/annotations_100/test.json"),
@@ -128,21 +129,23 @@ WORK_DIR
 
 尝试不同学习策略：
 ```
-"lr_config":dict(policy="cyclic",by_epoch=False,target_ratio=(10,1e-4),cyclic_times=1,step_ratio_up=0.4),
-"lr_config":dict(policy="CosineRestart",periods=[16,8],restart_weights=[1.0,0.1],min_lr_ratio=1e-5),
-"lr_config":dict(policy="CosineAnnealing",min_lr_ratio=1e-5),
+"lr_config":dict(_delete_=True,policy="step",warmup="linear",warmup_iters=500,warmup_ratio=0.001,step=[16,22]),
+"lr_config":dict(_delete_=True,policy="cyclic",by_epoch=False,target_ratio=(10,1e-4),cyclic_times=1,step_ratio_up=0.4),
+"lr_config":dict(_delete_=True,policy="CosineRestart",periods=[16,8],restart_weights=[1.0,0.1],min_lr_ratio=1e-5),
+"lr_config":dict(_delete_=True,policy="CosineAnnealing",min_lr_ratio=1e-5),
 ```
 
 ### VarifocalNet
 ```
-FLAG = "lr_x1_epochs_24"
+FLAG = "lr_1x_epochs_1x"
 CONFIG_NAME = "vfnet_r50_fpn"
 DATA_ROOT = "/workspace/notebooks/data_xxxx_coco"
 !mkdir -p data && rm -rf data/coco && ln -s {DATA_ROOT} data/coco
 
 os.environ["CFG_OPTIONS"] = """
 {
-    "optimizer.lr":0.0025,"lr_config.step":[16,22],"total_epochs":24,
+    "optimizer.lr":0.0025,"total_epochs":12,
+    "lr_config":dict(_delete_=True,policy="step",warmup="linear",warmup_iters=500,warmup_ratio=0.001,step=[8,11]),
     "evaluation.interval":12,"evaluation.metric":"bbox","log_config.interval":30,
     "data.train":dict(img_prefix="data/coco/",ann_file="data/coco/annotations_100/train.json"),
     "data.test":dict(img_prefix="data/coco/",ann_file="data/coco/annotations_100/test.json"),
