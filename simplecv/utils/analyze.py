@@ -92,11 +92,11 @@ def matrix_analysis_object(results, score_thr, out_file=None, **kwargs):
     Returns:
         lines (list): List of CSV lines.
     """
-    clean_thr = kwargs.get("clean_thr", 0.5)
+    clean_thr = kwargs.get("clean_thr", 0.3)
     clean_mode = kwargs.get("clean_mode", "min")
     match_mode = kwargs.get("match_mode", "iou")
     pos_iou_thr = kwargs.get("pos_iou_thr", 0.1)
-    min_pos_iou = kwargs.get("min_pos_iou", 0.01)
+    min_pos_iou = kwargs.get("min_pos_iou", 1e-5)
 
     total_gt = defaultdict(int)
     total_pos = defaultdict(int)
@@ -132,6 +132,11 @@ def matrix_analysis_object(results, score_thr, out_file=None, **kwargs):
                 else:
                     score_false_pos[d_label].append(d_score)
 
+            safe_index = set()
+            for i, j in zip(*np.where(ious >= min_pos_iou)):
+                if dt[i]["score"] >= get_val(score_thr, dt[i]["label"], 0.3):
+                    safe_index.add(j)
+
             for j, i in enumerate(ious.argmax(axis=0)):
                 d_label = dt[i]["label"]
                 d_score = dt[i]["score"]
@@ -140,6 +145,8 @@ def matrix_analysis_object(results, score_thr, out_file=None, **kwargs):
 
                 if ious[i, j] >= min_pos_iou:
                     if d_score >= get_val(score_thr, d_label, 0.3):
+                        exclude_j.add(j)
+                    elif j in safe_index:
                         exclude_j.add(j)
                     else:
                         score_missed[d_label].append(d_score)
@@ -256,7 +263,7 @@ def display_dataset(results, score_thr, output_dir, simple=False, **kwargs):
     Returns:
         None.
     """
-    clean_thr = kwargs.get("clean_thr", 0.5)
+    clean_thr = kwargs.get("clean_thr", 0.3)
     clean_mode = kwargs.get("clean_mode", "min")
     output_dir = increment_path(output_dir, exist_ok=False)
 
@@ -286,7 +293,7 @@ def display_hardmini(results, score_thr, output_dir, simple=True, **kwargs):
         None.
     """
     show = kwargs.get("show", False)
-    clean_thr = kwargs.get("clean_thr", 0.5)
+    clean_thr = kwargs.get("clean_thr", 0.3)
     clean_mode = kwargs.get("clean_mode", "min")
     output_dir = increment_path(output_dir, exist_ok=False)
 
