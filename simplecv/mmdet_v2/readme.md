@@ -129,9 +129,9 @@ WORK_DIR
 
 尝试不同学习策略：
 ```
-"lr_config":dict(_delete_=True,policy="step",warmup="linear",warmup_iters=500,warmup_ratio=0.001,step=[16,22]),
+"lr_config":dict(_delete_=True,policy="step",warmup="linear",warmup_iters=500,warmup_ratio=0.001,step=[8,11]),
 "lr_config":dict(_delete_=True,policy="cyclic",by_epoch=False,target_ratio=(10,1e-4),cyclic_times=1,step_ratio_up=0.4),
-"lr_config":dict(_delete_=True,policy="CosineRestart",periods=[16,8],restart_weights=[1.0,0.1],min_lr_ratio=1e-5),
+"lr_config":dict(_delete_=True,policy="CosineRestart",periods=[8,4],restart_weights=[1.0,0.1],min_lr_ratio=1e-5),
 "lr_config":dict(_delete_=True,policy="CosineAnnealing",min_lr_ratio=1e-5),
 ```
 
