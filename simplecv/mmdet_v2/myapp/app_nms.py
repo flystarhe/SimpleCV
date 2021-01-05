@@ -71,7 +71,38 @@ def _clean_with_iou(dt, thr=0.3, mode="min"):
     return dt_
 
 
-def clean_by_bbox(dt, thr=0.3, mode="min"):
+def _clean_with_dist(dt, k=2.0):
+    # shape (n, 4) in <x1, y1, x2, y2> format.
+    bboxes = [d["xyxy"] for d in dt]
+    bboxes = torch.FloatTensor(bboxes)
+
+    if bboxes.size(0) == 0:
+        return dt
+
+    xy = (bboxes[:, 2:] + bboxes[:, :2]) * 0.5
+    wh = (bboxes[:, 2:] - bboxes[:, :2]).clamp(min=0)
+
+    dist = (xy[:, None] - xy).abs()  # (n, n, 2)
+    limit = torch.max(wh[:, None], wh) * k  # (n, n, 2)
+    mask = torch.prod((dist <= limit).to(torch.float32), -1)
+
+    nodes = list(range(mask.size(0)))
+    lines = mask.nonzero(as_tuple=False).tolist()
+
+    dt_ = []
+    for i_set in clustering(nodes, lines):
+        vals = [dt[i] for i in i_set]
+        best = max(vals, key=lambda x: x["score"])
+        bboxes = np.array([d["xyxy"] for d in vals], dtype=np.float32)
+        (x1, y1), (x2, y2) = bboxes[:, :2].min(axis=0), bboxes[:, 2:].max(axis=0)
+        best["bbox"] = [x1, y1, x2 - x1, y2 - y1]
+        best["area"] = (x2 - x1) * (y2 - y1)
+        best["xyxy"] = [x1, y1, x2, y2]
+        dt_.append(best)
+    return dt_
+
+
+def clean_by_bbox(dt, thr=0.3, mode="min", k=2.0):
     cache = defaultdict(list)
     dt = copy.deepcopy(dt)
 
@@ -79,6 +110,9 @@ def clean_by_bbox(dt, thr=0.3, mode="min"):
         cache[d["label"]].append(d)
 
     dt_ = []
-    for _, vals in cache.items():
-        dt_.extend(_clean_with_iou(vals, thr, mode))
+    for v in cache.values():
+        if mode == "dist":
+            dt_.extend(_clean_with_dist(v, k))
+        else:
+            dt_.extend(_clean_with_iou(v, thr, mode))
     return dt_
