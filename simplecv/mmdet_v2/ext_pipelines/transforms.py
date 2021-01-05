@@ -54,13 +54,13 @@ class RandomCrop(object):
         dst_area = dst_w * dst_h
 
         s1 = (dst_area >= src_area * 0.7)
-        s2 = (dst_area >= self.width * self.height * 0.2)
+        s2 = (dst_area >= self.width * self.height * 0.1)
         s3 = (dst_h >= src_h * 0.7) * (dst_w >= src_h * 1.5)
         s4 = (dst_w >= src_w * 0.7) * (dst_h >= src_w * 1.5)
 
         dst = s1 + s2 + s3 + s4
         drop = np.logical_not(dst)
-        inner = (dst_w > 0) * (dst_h > 0)
+        inner = (dst_w > 1) * (dst_h > 1)
         return (dst * inner), (drop * inner)
 
     def _crop_and_paste(self, patch, img):
@@ -106,7 +106,7 @@ class RandomCrop(object):
         bboxes = bboxes.astype("int64")
         index = self._index_selection(labels)
         x_min, y_min, x_max, y_max = bboxes[index]
-        x_pad, y_pad = self.width // 2, self.height // 2
+        x_pad, y_pad = self.width // 3 * 2, self.height // 3 * 2
         patch = self._get_patch(x_min, y_min, x_max, y_max, x_pad, y_pad)
 
         dst_img = self._crop_and_paste(patch, img)
