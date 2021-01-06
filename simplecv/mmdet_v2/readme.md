@@ -29,7 +29,7 @@ docker run --gpus device=0 -d -p 9000:9000 --ipc=host --name test -v "$(pwd)":/w
 ```python
 import requests
 
-url = "http://ip:9001/main"
+url = "http://ip:9000/main"
 vals = {"image": "/workspace/test.png"}
 
 response = requests.get(url, params=vals)
@@ -114,8 +114,8 @@ WORK_DIR
 
 纵横比`ratios=h/s`异常时：
 ```
-"train_cfg.rpn.assigner":dict(pos_iou_thr=0.7,neg_iou_thr=0.1,min_pos_iou=0.1,match_low_quality=True),
-"train_cfg.rcnn.assigner":dict(pos_iou_thr=0.5,neg_iou_thr=0.3,min_pos_iou=0.3,match_low_quality=True),
+"train_cfg.rpn.assigner":dict(pos_iou_thr=0.7,neg_iou_thr=0.3,min_pos_iou=0.05,match_low_quality=True),
+"train_cfg.rcnn.assigner":dict(pos_iou_thr=0.5,neg_iou_thr=0.5,min_pos_iou=0.05,match_low_quality=True),
 # `max_iou_anchor_gt = 1 / (x + n -1)`, anchor shape `(x, x)`, gt shape `(1, nx)`, `x` in scales
 # `if x=8; max_iou = 1 / (7 + n); ratios(8,16,24) <- 1/8,1/9,1/10`
 # `if x=4; max_iou = 1 / (3 + n); ratios(4,8,12) <- 1/4,1/5,1/6`
