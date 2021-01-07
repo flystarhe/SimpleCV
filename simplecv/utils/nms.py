@@ -49,7 +49,7 @@ def bbox_overlaps(dt, gt=None, mode="iou"):
     return ious.numpy()
 
 
-def _clean_with_iou(dt, thr=0.3, mode="min"):
+def _clean_with_iou(dt, mode="min", thr=0.3):
     ious = bbox_overlaps(dt, None, mode)
 
     if ious is None:
@@ -71,7 +71,7 @@ def _clean_with_iou(dt, thr=0.3, mode="min"):
     return dt_
 
 
-def _clean_with_dist(dt, k=2.0):
+def _clean_with_dist(dt, k=1.5):
     # shape (n, 4) in <x1, y1, x2, y2> format.
     bboxes = [d["xyxy"] for d in dt]
     bboxes = torch.FloatTensor(bboxes)
@@ -102,7 +102,7 @@ def _clean_with_dist(dt, k=2.0):
     return dt_
 
 
-def clean_by_bbox(dt, thr=0.3, mode="min", k=2.0):
+def clean_by_bbox(dt, mode="min", param=0.3):
     cache = defaultdict(list)
     dt = copy.deepcopy(dt)
 
@@ -112,7 +112,7 @@ def clean_by_bbox(dt, thr=0.3, mode="min", k=2.0):
     dt_ = []
     for v in cache.values():
         if mode == "dist":
-            dt_.extend(_clean_with_dist(v, k))
+            dt_.extend(_clean_with_dist(v, param))
         else:
-            dt_.extend(_clean_with_iou(v, thr, mode))
+            dt_.extend(_clean_with_iou(v, mode, param))
     return dt_

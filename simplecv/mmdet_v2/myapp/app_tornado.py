@@ -57,13 +57,58 @@ class Resize2(object):
 PIPELINES.register_module(name="Resize2", force=True, module=Resize2)
 
 
-def bboxes2dt(bbox_, code_):
-    dt = []
-    for i in range(bbox_.shape[0]):
-        xyxys = bbox_[i].tolist()
-        ann = dict(xyxy=xyxys[:4], score=xyxys[4], label=code_)
-        dt.append(ann)
-    return dt
+def xyxy2xywh(_bbox):
+    return [
+        _bbox[0],
+        _bbox[1],
+        _bbox[2] - _bbox[0],
+        _bbox[3] - _bbox[1],
+    ]
+
+
+def split(size, patch_size):
+    s = list(range(0, size - patch_size, patch_size))
+    s.append(size - patch_size)
+    return s
+
+
+def norm_detector(model, img):
+    result = inference_detector(model, img)
+    if isinstance(result, tuple):
+        bbox_result, _ = result
+    else:
+        bbox_result = result
+
+    bboxes = np.vstack(bbox_result)
+    labels = [
+        np.full(bbox.shape[0], i, dtype=np.int32)
+        for i, bbox in enumerate(bbox_result)
+    ]
+    labels = np.concatenate(labels)
+    return bboxes, labels
+
+
+def patch_detector(patch_size, model, img):
+    img_h, img_w, _ = img.shape
+
+    if patch_size > min(img_h, img_w):
+        return norm_detector(model, img)
+
+    ys = split(img_h, patch_size)
+    xs = split(img_w, patch_size)
+
+    bboxes_list = []
+    labels_list = []
+    for y in ys:
+        for x in xs:
+            sub_img = img[y: y + patch_size, x: x + patch_size]
+            bboxes, labels = norm_detector(model, sub_img)
+            bboxes += np.array([x, y, x, y, 0])
+            bboxes_list.append(bboxes)
+            labels_list.append(labels)
+    bboxes = np.vstack(bboxes_list)
+    labels = np.concatenate(labels_list)
+    return bboxes, labels
 
 
 class Cache(object):
@@ -84,29 +129,27 @@ class Cache(object):
 
 model = None
 classes = None
-cached = Cache()
-clean_thr = 0.01
+patch_size = 999999
 clean_mode = "min"
+clean_param = 0.3
+cached = Cache()
 
 
 class MainHandler(tornado.web.RequestHandler):
 
     def get(self):
         try:
-            global model, classes
-            global clean_thr, clean_mode
-            image_path = self.get_argument("image")
-            result = inference_detector(model, image_path)
-            if isinstance(result, tuple):
-                bboxes, _ = result
-            else:
-                bboxes = result
+            global model, classes, patch_size, clean_mode, clean_param
+
+            img = cv.imread(self.get_argument("image"), 1)
+            bboxes, labels = patch_detector(patch_size, model, img)
 
             dt = []
-            for bbox_, code_ in zip(bboxes, classes):
-                dt.extend(bboxes2dt(bbox_, code_))
+            for i in range(bboxes.shape[0]):
+                xyxys, label = bboxes[i].tolist(), classes[labels[i]]
+                dt.append(dict(bbox=xyxy2xywh(xyxys), xyxy=xyxys[:4], score=xyxys[4], label=label))
 
-            dt = clean_by_bbox(dt, clean_thr, clean_mode)
+            dt = clean_by_bbox(dt, clean_mode, clean_param)
             data = [d["xyxy"] + [d["label"], d["score"]] for d in dt]
             res = {"status": 0, "time": int(time.time()), "data": data}
         except Exception:
@@ -130,15 +173,22 @@ def make_app():
 
 
 if __name__ == "__main__":
-    config_file, checkpoint_file = sys.argv[2], sys.argv[3]
+    port = sys.argv[1]
+    config_file = sys.argv[2]
+    checkpoint_file = sys.argv[3]
+
     model = init_detector(config_file, checkpoint_file, device="cuda:0")
     classes = model.CLASSES
 
-    if len(sys.argv) == 6:
-        clean_thr, clean_mode = float(sys.argv[4]), sys.argv[5]
+    if len(sys.argv) >= 5:
+        patch_size = sys.argv[4]
+
+    if len(sys.argv) >= 7:
+        clean_mode, clean_param = sys.argv[5], sys.argv[6]
 
     cached.add(argv=sys.argv)
+    patch_size = int(patch_size)
+    clean_param = float(clean_param)
 
-    app = make_app()
-    app.listen(sys.argv[1])
+    make_app().listen(int(port))
     tornado.ioloop.IOLoop.current().start()

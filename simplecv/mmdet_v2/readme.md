@@ -22,10 +22,10 @@ docker save -o mmdet2.7-20.12.tar simplecv:mmdet2.7
 docker load -i mmdet2.7-20.12.tar
 
 docker run --gpus device=0 -d -p 9000:9000 --ipc=host --name test -v "$(pwd)":/workspace simplecv:mmdet2.7 [dev|ssh|app] \
-    /workspace/faster_rcnn_res1.py /workspace/epoch_48.pth 0.1 min
+    /workspace/faster_rcnn_res1.py /workspace/latest.pth 999999 dist 1.5
 ```
 
-`python /workspace/app_tornado.py 9000 config.py checkpoint.pth [thr:float] [mode:str]`:
+`port config checkpoint [patch:int] [mode:str] [param:float]`:
 ```python
 import requests
 
@@ -62,7 +62,7 @@ EXPERIMENT_NAME
 ```
 FLAG = "lr_1x_epochs_1x"
 CONFIG_NAME = "faster_rcnn_res1"
-DATA_ROOT = "/workspace/notebooks/data_xxxx_coco"
+DATA_ROOT = "/workspace/notebooks/xxxx"
 !mkdir -p data && rm -rf data/coco && ln -s {DATA_ROOT} data/coco
 
 os.environ["CFG_OPTIONS"] = """
@@ -112,7 +112,7 @@ WORK_DIR
 "model":dict(pretrained="torchvision://resnet101",backbone=dict(type="ResNet",depth=101,out_indices=(0,1,2,3),frozen_stages=1)),
 "model":dict(pretrained="open-mmlab://resnext101_32x4d",backbone=dict(type="ResNeXt",depth=101,groups=32,base_width=4,num_stages=4,out_indices=(0,1,2,3),frozen_stages=1,norm_cfg=dict(type="BN",requires_grad=True),style="pytorch")),
 "model":dict(pretrained="open-mmlab://resnext101_64x4d",backbone=dict(type="ResNeXt",depth=101,groups=64,base_width=4,num_stages=4,out_indices=(0,1,2,3),frozen_stages=1,norm_cfg=dict(type="BN",requires_grad=True),style="pytorch")),
-# lr = 0.01 / 8 * batch_size, anchor scale range is [28, 448].
+# lr = 0.01 / 8 * batch_size, anchor scale range is [32, 256].
 ```
 
 纵横比`ratios=h/w`异常时：
@@ -142,7 +142,7 @@ WORK_DIR
 ```
 FLAG = "lr_1x_epochs_1x"
 CONFIG_NAME = "vfnet_r50_fpn"
-DATA_ROOT = "/workspace/notebooks/data_xxxx_coco"
+DATA_ROOT = "/workspace/notebooks/xxxx"
 !mkdir -p data && rm -rf data/coco && ln -s {DATA_ROOT} data/coco
 
 os.environ["CFG_OPTIONS"] = """
@@ -170,19 +170,19 @@ os.environ["CFG_OPTIONS"] = """
 
 ### test
 ```
-FLAG = "FLAG"
-CONFIG_NAME = "CONFIG_NAME"
-EXPERIMENT_NAME = "EXPERIMENT_NAME"
-DATA_ROOT = "/workspace/notebooks/data_xxxx_coco"
+FLAG = "xxxx"
+CONFIG_NAME = "xxxx"
+EXPERIMENT_NAME = "xxxx"
+DATA_ROOT = "/workspace/notebooks/xxxx"
 !mkdir -p data && rm -rf data/coco && ln -s {DATA_ROOT} data/coco
 os.environ["CFG_OPTIONS"] = "{}"
 
 WORK_DIR = "/workspace/results/{}/{}".format(EXPERIMENT_NAME, FLAG)
-CHECKPOINT = "{}/epoch_{}.pth".format(WORK_DIR, 24)
 CONFIG = "{}/{}.py".format(WORK_DIR, CONFIG_NAME)
+CHECKPOINT = "{}/latest.pth".format(WORK_DIR)
 
 MY_SCRIPT = "{}/simplecv/mmdet_v2/py_test.py".format(SIMPLECV_PATH)
-ARG_TEST = "{} {} {} {} --gpus 2".format(DATA_ROOT, "annotations_100/test.json", CONFIG, CHECKPOINT)
+ARG_TEST = "{} {} {} {} 999999 --gpus 2".format(DATA_ROOT, "annotations_100/test.json", CONFIG, CHECKPOINT)
 
 !PYTHONPATH={SIMPLECV_PATH}:{MMDET_PATH} python {MY_SCRIPT} {ARG_TEST}
 WORK_DIR
@@ -190,16 +190,16 @@ WORK_DIR
 
 ## mmdet/tools
 ```
-FLAG = "FLAG"
-CONFIG_NAME = "CONFIG_NAME"
-EXPERIMENT_NAME = "EXPERIMENT_NAME"
-DATA_ROOT = "/workspace/notebooks/data_xxxx_coco"
+FLAG = "xxxx"
+CONFIG_NAME = "xxxx"
+EXPERIMENT_NAME = "xxxx"
+DATA_ROOT = "/workspace/notebooks/xxxx"
 !mkdir -p data && rm -rf data/coco && ln -s {DATA_ROOT} data/coco
 MMDET_PATH = "/usr/src/mmdetection"
 
 WORK_DIR = "/workspace/results/{}/{}".format(EXPERIMENT_NAME, FLAG)
-CHECKPOINT = "{}/epoch_{}.pth".format(WORK_DIR, 24)
 CONFIG = "{}/{}.py".format(WORK_DIR, CONFIG_NAME)
+CHECKPOINT = "{}/latest.pth".format(WORK_DIR)
 
 import os
 os.environ["MKL_THREADING_LAYER"] = "GNU"
@@ -251,6 +251,6 @@ from simplecv.utils.analyze import display_hardmini
 pkl_file = "xxxx"
 score_thr = {"*": 0.3}
 output_dir = str(Path(pkl_file).parent) + "-viz"
-kwargs = dict(show=False, clean_thr=0.3, clean_mode="min", match_mode="iou", pos_iou_thr=0.1, min_pos_iou=1e-3)
+kwargs = dict(show=False, clean_mode="min", clean_param=0.3, match_mode="iou", pos_iou_thr=0.1, min_pos_iou=1e-3)
 display_hardmini(pkl_file, score_thr, output_dir, simple=True, **kwargs)
 ```

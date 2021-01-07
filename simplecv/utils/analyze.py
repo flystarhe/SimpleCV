@@ -92,8 +92,8 @@ def matrix_analysis_object(results, score_thr, out_file=None, **kwargs):
     Returns:
         lines (list): List of CSV lines.
     """
-    clean_thr = kwargs.get("clean_thr", 0.3)
     clean_mode = kwargs.get("clean_mode", "min")
+    clean_param = kwargs.get("clean_param", 0.3)
     match_mode = kwargs.get("match_mode", "iou")
     pos_iou_thr = kwargs.get("pos_iou_thr", 0.1)
     min_pos_iou = kwargs.get("min_pos_iou", 1e-3)
@@ -107,7 +107,7 @@ def matrix_analysis_object(results, score_thr, out_file=None, **kwargs):
     bads_tail = ["\nfile_name,dt,gt,hard,missed,false_pos"]
     n_dt, n_gt, n_hard, n_missed, n_false_pos = 0, 0, 0, 0, 0
     for file_name, _, _, dt, gt in results:
-        dt = nms.clean_by_bbox(dt, clean_thr, clean_mode)
+        dt = nms.clean_by_bbox(dt, clean_mode, clean_param)
         ious = nms.bbox_overlaps(dt, gt, match_mode)
 
         i_hard = 0
@@ -263,8 +263,8 @@ def display_dataset(results, score_thr, output_dir, simple=False, **kwargs):
     Returns:
         None.
     """
-    clean_thr = kwargs.get("clean_thr", 0.3)
     clean_mode = kwargs.get("clean_mode", "min")
+    clean_param = kwargs.get("clean_param", 0.3)
     output_dir = increment_path(output_dir, exist_ok=False)
 
     if isinstance(results, str):
@@ -273,7 +273,7 @@ def display_dataset(results, score_thr, output_dir, simple=False, **kwargs):
     for file_name, _, _, dt, gt in results:
         dt = [d for d in dt if d["score"] >= get_val(score_thr, d["label"], 0.3)]
         if simple:
-            dt = nms.clean_by_bbox(dt, clean_thr, clean_mode)
+            dt = nms.clean_by_bbox(dt, clean_mode, clean_param)
 
         viz.image_show([os.path.join(output_dir, "images-pred")], file_name, dt, gt, None, None)
     return str(output_dir)
@@ -293,8 +293,8 @@ def display_hardmini(results, score_thr, output_dir, simple=True, **kwargs):
         None.
     """
     show = kwargs.get("show", False)
-    clean_thr = kwargs.get("clean_thr", 0.3)
     clean_mode = kwargs.get("clean_mode", "min")
+    clean_param = kwargs.get("clean_param", 0.3)
     output_dir = increment_path(output_dir, exist_ok=False)
 
     if isinstance(results, str):
@@ -309,7 +309,7 @@ def display_hardmini(results, score_thr, output_dir, simple=True, **kwargs):
     for (file_name, _, _, dt, gt), line in zip(results, bads_tail):
         dt = [d for d in dt if d["score"] >= get_val(score_thr, d["label"], 0.3)]
         if simple:
-            dt = nms.clean_by_bbox(dt, clean_thr, clean_mode)
+            dt = nms.clean_by_bbox(dt, clean_mode, clean_param)
 
         tt = line.split(",")[-3:]
         ss = ["hard", "missed", "false_pos"]
