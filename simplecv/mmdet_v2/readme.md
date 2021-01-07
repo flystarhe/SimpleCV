@@ -56,7 +56,7 @@ EXPERIMENT_NAME = time.strftime("xxxx_%m%d_%H%M")
 EXPERIMENT_NAME
 ```
 
->`%time jupyter nbconvert --ExecutePreprocessor.timeout=-1 --to html --execute --allow-errors notebook.ipynb`
+>`%time !jupyter nbconvert --ExecutePreprocessor.timeout=-1 --to html --execute --allow-errors notebook.ipynb`
 
 ## train
 ```
