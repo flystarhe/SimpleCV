@@ -50,6 +50,7 @@ SIMPLECV_PATH = "/workspace/SimpleCV"
 os.environ["MMDET_PATH"] = MMDET_PATH
 os.environ["SIMPLECV_PATH"] = SIMPLECV_PATH
 
+os.environ["CROP_SIZE"] = "800"
 os.environ["MKL_THREADING_LAYER"] = "GNU"
 EXPERIMENT_NAME = time.strftime("xxxx_%m%d_%H%M")
 EXPERIMENT_NAME

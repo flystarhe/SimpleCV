@@ -2,6 +2,7 @@ import os as __os
 import os.path as __osp
 
 __MMDET_PATH = __os.environ["MMDET_PATH"]
+__CROP_SIZE = int(__os.environ["CROP_SIZE"])
 
 _base_ = [
     __osp.join(__MMDET_PATH, 'configs/_base_/models/faster_rcnn_r50_fpn.py'),
@@ -47,7 +48,7 @@ train_pipeline = [
         update_pad_shape=False,
         skip_img_without_anno=True),
     dict(type='Resize2', test_mode=False, ratio_range=(0.8, 1.2)),
-    dict(type='RandomCrop', height=800, width=800),
+    dict(type='RandomCrop', height=__CROP_SIZE, width=__CROP_SIZE),
     dict(type='RandomFlip', flip_ratio=0.5),
     dict(type='Normalize', **img_norm_cfg),
     dict(type='Pad', size_divisor=32),
