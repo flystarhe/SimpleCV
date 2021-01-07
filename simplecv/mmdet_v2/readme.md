@@ -55,6 +55,8 @@ EXPERIMENT_NAME = time.strftime("xxxx_%m%d_%H%M")
 EXPERIMENT_NAME
 ```
 
+>`%time jupyter nbconvert --ExecutePreprocessor.timeout=-1 --to html --execute --allow-errors notebook.ipynb`
+
 ## train
 ```
 FLAG = "lr_1x_epochs_1x"
