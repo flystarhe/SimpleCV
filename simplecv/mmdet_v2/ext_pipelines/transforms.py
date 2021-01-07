@@ -54,7 +54,7 @@ class RandomCrop(object):
         dst_area = dst_w * dst_h
 
         s1 = (dst_area >= src_area * 0.7)
-        s2 = (dst_area >= self.width * self.height * 0.1)
+        s2 = (dst_area >= 9216)  # 9216 == (96 * 96)
         s3 = (dst_h >= src_h * 0.7) * (dst_w >= src_h * 1.5)
         s4 = (dst_w >= src_w * 0.7) * (dst_h >= src_w * 1.5)
 
