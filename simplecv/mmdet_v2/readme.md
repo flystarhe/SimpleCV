@@ -115,10 +115,10 @@ WORK_DIR
 # lr = 0.01 / 8 * batch_size, anchor scale range is [28, 448].
 ```
 
-纵横比`ratios=h/s`异常时：
+纵横比`ratios=h/w`异常时：
 ```
-"train_cfg.rpn.assigner":dict(pos_iou_thr=0.7,neg_iou_thr=0.3,min_pos_iou=0.05,match_low_quality=True),
-"train_cfg.rcnn.assigner":dict(pos_iou_thr=0.5,neg_iou_thr=0.5,min_pos_iou=0.05,match_low_quality=True),
+"train_cfg.rpn.assigner":dict(pos_iou_thr=0.7,neg_iou_thr=0.1,min_pos_iou=0.1,match_low_quality=True),
+"train_cfg.rcnn.assigner":dict(pos_iou_thr=0.5,neg_iou_thr=0.1,min_pos_iou=0.1,match_low_quality=True),
 # `max_iou_anchor_gt = 1 / (x + n -1)`, anchor shape `(x, x)`, gt shape `(1, nx)`, `x` in scales
 # `if x=8; max_iou = 1 / (7 + n); ratios(8,16,24) <- 1/8,1/9,1/10`
 # `if x=4; max_iou = 1 / (3 + n); ratios(4,8,12) <- 1/4,1/5,1/6`
