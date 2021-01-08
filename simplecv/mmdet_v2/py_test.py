@@ -19,11 +19,19 @@ G_COMMAND = "CUDA_VISIBLE_DEVICES={} PYTHONPATH={} python {}/py_app.py {} {} {} 
 G_PYTHONPATH = "{}:{}".format(os.environ["SIMPLECV_PATH"], os.environ["MMDET_PATH"])
 
 
-def system_command(command_line):
-    result = subprocess.run(command_line, shell=True, stdout=subprocess.PIPE)
-    if result.returncode == 0:
-        return result.stdout.decode("utf8").strip()
-    return ""
+def system_command(params):
+    gpu_id, file_list, argv = params
+    # argv: (config, checkpoint, patch_size)
+
+    logs = []
+    for file_name in file_list:
+        command_line = G_COMMAND.format(gpu_id, G_PYTHONPATH, G_THIS_DIR, file_name, *argv)
+        result = subprocess.run(command_line, shell=True, stdout=subprocess.PIPE)
+        if result.returncode != 0:
+            logs.append("GPU{} {}: {}".format(gpu_id, file_name, result.args))
+        else:
+            logs.append("GPU{} {}: {}".format(gpu_id, file_name, "OK."))
+    return "\n".join(logs)
 
 
 def collect_results(pkl_list):
@@ -38,6 +46,7 @@ def collect_results(pkl_list):
 
 
 def multi_gpu_test(dataset, config, checkpoint, patch_size, gpus=4):
+
     def task_split(dataset, splits, tmp_dir):
         file_list = []
         n = len(dataset)
@@ -50,18 +59,15 @@ def multi_gpu_test(dataset, config, checkpoint, patch_size, gpus=4):
             file_list.append(out_file)
         return file_list
 
-    gpu_ids = list(range(gpus)) * 4
-    file_list = task_split(dataset, gpus * 4, "tmp")
-    assert len(gpu_ids) >= len(file_list)
-
-    command_list = []
-    for i, filename in zip(gpu_ids, file_list):
-        command_list.append(G_COMMAND.format(i, G_PYTHONPATH, G_THIS_DIR, filename, config, checkpoint, patch_size))
+    argv = (config, checkpoint, patch_size)
+    in_files = task_split(dataset, gpus * 4, "tmp/")
+    command_params = [(i, in_files[i::gpus], argv) for i in range(gpus)]
 
     pool = multiprocessing.Pool(processes=gpus)
-    results = pool.map(system_command, command_list)
-    results = [r.strip().split("\n")[-1] for r in results]
-    return collect_results(results)
+    logs = pool.map(system_command, command_params)
+    print("multi-gpu test logs:\n" + "\n".join(logs))
+    pkl_list = [in_file + ".out" for in_file in in_files]
+    return collect_results(pkl_list)
 
 
 def xywh2xyxy(_bbox):
