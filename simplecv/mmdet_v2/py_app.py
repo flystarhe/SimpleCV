@@ -106,6 +106,6 @@ if __name__ == "__main__":
     parser.add_argument("data", type=str, help="json file path")
     parser.add_argument("config", type=str, help="config file path")
     parser.add_argument("checkpoint", type=str, help="checkpoint file path")
-    parser.add_argument("patch_size", type=int, default=999999, help="json file path")
+    parser.add_argument("patch_size", type=int, default=999999, help="patch size")
     args = parser.parse_args()
     print(main(args))

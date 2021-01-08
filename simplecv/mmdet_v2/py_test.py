@@ -150,7 +150,7 @@ if __name__ == "__main__":
     parser.add_argument("coco", type=str, help="coco json file")
     parser.add_argument("config", type=str, help="config file path")
     parser.add_argument("checkpoint", type=str, help="checkpoint file path")
-    parser.add_argument("patch_size", type=int, default=999999, help="json file path")
+    parser.add_argument("patch_size", type=int, default=999999, help="patch size")
     parser.add_argument("--gpus", type=int, default=4, help="number of gpus to use")
     args = parser.parse_args()
     print(main(args))

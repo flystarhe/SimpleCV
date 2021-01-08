@@ -85,6 +85,7 @@ os.environ["CFG_OPTIONS"] = """
     "model.rpn_head.anchor_generator.strides":[4,8,16,32,64],
     "model.rpn_head.anchor_generator.base_sizes":[4,8,16,32,64],
     "model.roi_head.bbox_roi_extractor.featmap_strides":[4,8,16,32],
+    "model.roi_head.bbox_roi_extractor.finest_scale":56,
     "model.roi_head.bbox_head.num_classes":2,
     "model":dict(pretrained="torchvision://resnet50",backbone=dict(type="ResNet",depth=50,out_indices=(0,1,2,3),frozen_stages=1)),
     "train_cfg.rpn_proposal":dict(nms_across_levels=False,nms_pre=2000,nms_post=1000,max_num=1000,min_bbox_size=0),
@@ -117,11 +118,28 @@ WORK_DIR
 
 纵横比`ratios=h/w`异常时：
 ```
-"train_cfg.rpn.assigner":dict(pos_iou_thr=0.7,neg_iou_thr=0.1,min_pos_iou=0.1,match_low_quality=True),
-"train_cfg.rcnn.assigner":dict(pos_iou_thr=0.5,neg_iou_thr=0.1,min_pos_iou=0.1,match_low_quality=True),
-# `max_iou_anchor_gt = 1 / (x + n -1)`, anchor shape `(x, x)`, gt shape `(1, nx)`, `x` in scales
-# `if x=8; max_iou = 1 / (7 + n); ratios(8,16,24) <- 1/8,1/9,1/10`
-# `if x=4; max_iou = 1 / (3 + n); ratios(4,8,12) <- 1/4,1/5,1/6`
+# crop_size=320,min_w_h=20,learn_factor=2.0
+"model.roi_head.bbox_roi_extractor.finest_scale":28,
+"train_cfg.rpn.assigner":dict(pos_iou_thr=0.7,neg_iou_thr=0.2,min_pos_iou=0.2,match_low_quality=True),
+"train_cfg.rcnn.assigner":dict(pos_iou_thr=0.5,neg_iou_thr=0.5,min_pos_iou=0.5,match_low_quality=True),
+# crop_size=320,min_w_h=20,learn_factor=1.5
+"model.roi_head.bbox_roi_extractor.finest_scale":28,
+"train_cfg.rpn.assigner":dict(pos_iou_thr=0.7,neg_iou_thr=0.2,min_pos_iou=0.2,match_low_quality=True),
+"train_cfg.rcnn.assigner":dict(pos_iou_thr=0.5,neg_iou_thr=0.3,min_pos_iou=0.3,match_low_quality=True),
+
+import numpy as np
+learn_factor = 2.0
+finest_scale = 28
+crop_size = 320
+min_side = 24
+
+print("scale: {:.2f}".format(np.sqrt(crop_size * min_side)))
+for base_size in [4, 8, 16, 32]:
+    finest_scale = finest_scale * 2
+    i = (base_size * 8) * np.sqrt(2) * min_side
+    u = (base_size * 8) ** 2 + (crop_size * min_side)
+    r1, r2 = i / (u - i), i * learn_factor / (u - i * learn_factor)
+    print("{:03d}, {:02d}, {:.2f}, {:.2f}".format(finest_scale, base_size, r1, r2))
 ```
 
 尝试不同损失函数/权重：
@@ -136,6 +154,18 @@ WORK_DIR
 "lr_config":dict(_delete_=True,policy="cyclic",by_epoch=False,target_ratio=(10,1e-4),cyclic_times=1,step_ratio_up=0.4),
 "lr_config":dict(_delete_=True,policy="CosineRestart",periods=[8,4],restart_weights=[1.0,0.1],min_lr_ratio=1e-5),
 "lr_config":dict(_delete_=True,policy="CosineAnnealing",min_lr_ratio=1e-5),
+```
+
+映射到`level=0`的阈值：
+```
+"model.roi_head.bbox_roi_extractor.finest_scale":56,
+
+mmdet/models/roi_heads/roi_extractors/single_level_roi_extractor.py
+
+- scale < finest_scale * 2: level 0
+- finest_scale * 2 <= scale < finest_scale * 4: level 1
+- finest_scale * 4 <= scale < finest_scale * 8: level 2
+- scale >= finest_scale * 8: level 3
 ```
 
 ### VarifocalNet
