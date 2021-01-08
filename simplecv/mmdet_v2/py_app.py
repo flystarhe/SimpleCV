@@ -30,8 +30,8 @@ def xyxy2xywh(_bbox):
     ]
 
 
-def split(size, patch_size):
-    s = list(range(0, size - patch_size, patch_size))
+def split(size, patch_size, overlap=64):
+    s = list(range(0, size - patch_size, patch_size - overlap))
     s.append(size - patch_size)
     return s
 
