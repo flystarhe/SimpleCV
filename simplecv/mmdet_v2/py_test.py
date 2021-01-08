@@ -50,8 +50,9 @@ def multi_gpu_test(dataset, config, checkpoint, patch_size, gpus=4):
             file_list.append(out_file)
         return file_list
 
-    gpu_ids = list(range(gpus))
-    file_list = task_split(dataset, gpus, "tmp")
+    gpu_ids = list(range(gpus)) * 4
+    file_list = task_split(dataset, gpus * 4, "tmp")
+    assert len(gpu_ids) >= len(file_list)
 
     command_list = []
     for i, filename in zip(gpu_ids, file_list):
