@@ -93,10 +93,10 @@ def matrix_analysis_object(results, score_thr, out_file=None, **kwargs):
         lines (list): List of CSV lines.
     """
     clean_mode = kwargs.get("clean_mode", "min")
-    clean_param = kwargs.get("clean_param", 0.3)
+    clean_param = kwargs.get("clean_param", 0.1)
     match_mode = kwargs.get("match_mode", "iou")
-    pos_iou_thr = kwargs.get("pos_iou_thr", 0.1)
-    min_pos_iou = kwargs.get("min_pos_iou", 1e-3)
+    pos_iou_thr = kwargs.get("pos_iou_thr", 0.3)
+    min_pos_iou = kwargs.get("min_pos_iou", 0.1)
 
     total_gt = defaultdict(int)
     total_pos = defaultdict(int)
@@ -264,7 +264,7 @@ def display_dataset(results, score_thr, output_dir, simple=False, **kwargs):
         None.
     """
     clean_mode = kwargs.get("clean_mode", "min")
-    clean_param = kwargs.get("clean_param", 0.3)
+    clean_param = kwargs.get("clean_param", 0.1)
     output_dir = increment_path(output_dir, exist_ok=False)
 
     if isinstance(results, str):
@@ -294,7 +294,7 @@ def display_hardmini(results, score_thr, output_dir, simple=True, **kwargs):
     """
     show = kwargs.get("show", False)
     clean_mode = kwargs.get("clean_mode", "min")
-    clean_param = kwargs.get("clean_param", 0.3)
+    clean_param = kwargs.get("clean_param", 0.1)
     output_dir = increment_path(output_dir, exist_ok=False)
 
     if isinstance(results, str):

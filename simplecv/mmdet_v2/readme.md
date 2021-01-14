@@ -50,7 +50,6 @@ SIMPLECV_PATH = "/workspace/SimpleCV"
 os.environ["MMDET_PATH"] = MMDET_PATH
 os.environ["SIMPLECV_PATH"] = SIMPLECV_PATH
 
-os.environ["CROP_SIZE"] = "800"
 os.environ["MKL_THREADING_LAYER"] = "GNU"
 EXPERIMENT_NAME = time.strftime("xxxx_%m%d_%H%M")
 EXPERIMENT_NAME
@@ -60,6 +59,7 @@ EXPERIMENT_NAME
 
 ## train
 ```
+os.environ["CROP_SIZE"] = "800"
 FLAG = "lr_1x_epochs_1x"
 CONFIG_NAME = "faster_rcnn_res1"
 DATA_ROOT = "/workspace/notebooks/xxxx"
@@ -170,6 +170,7 @@ mmdet/models/roi_heads/roi_extractors/single_level_roi_extractor.py
 
 ### VarifocalNet
 ```
+os.environ["CROP_SIZE"] = "800"
 FLAG = "lr_1x_epochs_1x"
 CONFIG_NAME = "vfnet_r50_fpn"
 DATA_ROOT = "/workspace/notebooks/xxxx"
@@ -281,6 +282,6 @@ from simplecv.utils.analyze import display_hardmini
 pkl_file = "xxxx"
 score_thr = {"*": 0.3}
 output_dir = str(Path(pkl_file).parent) + "-viz"
-kwargs = dict(show=False, clean_mode="min", clean_param=0.3, match_mode="iou", pos_iou_thr=0.1, min_pos_iou=1e-3)
+kwargs = dict(show=False, clean_mode="min", clean_param=0.1, match_mode="iou", pos_iou_thr=0.3, min_pos_iou=0.1)
 display_hardmini(pkl_file, score_thr, output_dir, simple=True, **kwargs)
 ```

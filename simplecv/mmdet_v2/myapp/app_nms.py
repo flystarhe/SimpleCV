@@ -49,7 +49,7 @@ def bbox_overlaps(dt, gt=None, mode="iou"):
     return ious.numpy()
 
 
-def _clean_with_iou(dt, mode="min", thr=0.3):
+def _clean_with_iou(dt, mode="min", thr=0.1):
     ious = bbox_overlaps(dt, None, mode)
 
     if ious is None:
@@ -102,7 +102,7 @@ def _clean_with_dist(dt, k=1.5):
     return dt_
 
 
-def clean_by_bbox(dt, mode="min", param=0.3):
+def clean_by_bbox(dt, mode="min", param=0.1):
     cache = defaultdict(list)
     dt = copy.deepcopy(dt)
 
