@@ -16,7 +16,7 @@ class RandomCrop(object):
     """
 
     def __init__(self, height, width, p=1.0):
-        safe_area = min(width // 3, 96) ** 2
+        safe_area = max(width // 3, 96) ** 2
         self.nonignore_area = safe_area
         self.height = height
         self.width = width
