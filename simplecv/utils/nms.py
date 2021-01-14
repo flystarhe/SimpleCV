@@ -62,7 +62,7 @@ def _clean_with_iou(dt, mode="min", thr=0.3):
     for i_set in clustering(nodes, lines):
         vals = [dt[i] for i in i_set]
         best = max(vals, key=lambda x: x["score"])
-        bboxes = np.array([d["xyxy"] for d in vals], dtype=np.float32)
+        bboxes = np.array([d["xyxy"] for d in vals], dtype=np.float64)
         (x1, y1), (x2, y2) = bboxes[:, :2].min(axis=0), bboxes[:, 2:].max(axis=0)
         best["bbox"] = [x1, y1, x2 - x1, y2 - y1]
         best["area"] = (x2 - x1) * (y2 - y1)
@@ -84,7 +84,7 @@ def _clean_with_dist(dt, k=1.5):
 
     dist = (xy[:, None] - xy).abs()  # (n, n, 2)
     limit = torch.max(wh[:, None], wh) * k  # (n, n, 2)
-    mask = torch.prod((dist <= limit).to(torch.float32), -1)
+    mask = torch.prod((dist <= limit).to(torch.int), -1)
 
     nodes = list(range(mask.size(0)))
     lines = mask.nonzero(as_tuple=False).tolist()
@@ -93,7 +93,7 @@ def _clean_with_dist(dt, k=1.5):
     for i_set in clustering(nodes, lines):
         vals = [dt[i] for i in i_set]
         best = max(vals, key=lambda x: x["score"])
-        bboxes = np.array([d["xyxy"] for d in vals], dtype=np.float32)
+        bboxes = np.array([d["xyxy"] for d in vals], dtype=np.float64)
         (x1, y1), (x2, y2) = bboxes[:, :2].min(axis=0), bboxes[:, 2:].max(axis=0)
         best["bbox"] = [x1, y1, x2 - x1, y2 - y1]
         best["area"] = (x2 - x1) * (y2 - y1)
