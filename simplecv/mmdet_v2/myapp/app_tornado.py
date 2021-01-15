@@ -123,7 +123,7 @@ def patch_detector(patch_size, model, img, device=None, test_pipeline=None):
     results = []
     batch_size = 8
     xys = [(y, x) for y in ys for x in xs]
-    for i in range(0, len(xys), step=batch_size):
+    for i in range(0, len(xys), batch_size):
         imgs = [img[y: y + patch_size, x: x + patch_size] for y, x in xys[i: i + batch_size]]
         results.extend(inference_detector(model, imgs, device, test_pipeline))
     results = [_bbox_result(result) for result in results]
