@@ -25,9 +25,9 @@ from mmdet.datasets.builder import PIPELINES
 from simplecv.mmdet_v2.ext_datasets import CocoDataset
 from simplecv.mmdet_v2.ext_pipelines import RandomCrop, Resize2
 
-DATASETS.register_module(name='CocoDataset', force=True, module=CocoDataset)
-PIPELINES.register_module(name='RandomCrop', force=True, module=RandomCrop)
-PIPELINES.register_module(name='Resize2', force=True, module=Resize2)
+DATASETS.register_module(name="CocoDataset", force=True, module=CocoDataset)
+PIPELINES.register_module(name="RandomCrop", force=True, module=RandomCrop)
+PIPELINES.register_module(name="Resize2", force=True, module=Resize2)
 ################################################################
 
 

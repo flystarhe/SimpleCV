@@ -3,8 +3,12 @@ import os
 import argparse
 import cv2 as cv
 import numpy as np
+import torch
 from mmcv import Config
-from mmdet.apis import init_detector, inference_detector
+from mmcv.parallel import collate
+from mmcv.parallel import scatter
+from mmdet.apis import init_detector
+from mmdet.datasets.pipelines import Compose
 from simplecv.beta.hej import io
 
 
@@ -15,9 +19,9 @@ from mmdet.datasets.builder import PIPELINES
 from simplecv.mmdet_v2.ext_datasets import CocoDataset
 from simplecv.mmdet_v2.ext_pipelines import RandomCrop, Resize2
 
-DATASETS.register_module(name='CocoDataset', force=True, module=CocoDataset)
-PIPELINES.register_module(name='RandomCrop', force=True, module=RandomCrop)
-PIPELINES.register_module(name='Resize2', force=True, module=Resize2)
+DATASETS.register_module(name="CocoDataset", force=True, module=CocoDataset)
+PIPELINES.register_module(name="RandomCrop", force=True, module=RandomCrop)
+PIPELINES.register_module(name="Resize2", force=True, module=Resize2)
 ################################################################
 
 
@@ -31,45 +35,60 @@ def xyxy2xywh(_bbox):
 
 
 def split(size, patch_size, overlap=64):
+    if patch_size >= size:
+        return [0]
+
     s = list(range(0, size - patch_size, patch_size - overlap))
     s.append(size - patch_size)
     return s
 
 
-def norm_detector(model, img):
-    result = inference_detector(model, img)
-    if isinstance(result, tuple):
-        bbox_result, _ = result
-    else:
-        bbox_result = result
+def inference_detector(model, imgs, device=None, test_pipeline=None):
+    # imgs (list[ndarray]): `[cv.imread(file_name, 1), ...]`
+    if device is None:
+        device = next(model.parameters()).device
 
-    bboxes = np.vstack(bbox_result)
+    if test_pipeline is None:
+        cfg = model.cfg.copy()
+        test_pipeline = cfg.data.test.pipeline
+        test_pipeline[0].type = "LoadImageFromWebcam"
+        test_pipeline = Compose(test_pipeline)
+
+    data = [test_pipeline(dict(img=img)) for img in imgs]
+    data = collate(data, samples_per_gpu=len(data))
+
+    # just get the actual data from DataContainer
+    data["img_metas"] = [img_metas.data[0] for img_metas in data["img_metas"]]
+    data["img"] = [img.data[0] for img in data["img"]]
+    data = scatter(data, [device])[0]
+    with torch.no_grad():
+        results = model(return_loss=False, rescale=True, **data)
+    return results
+
+
+def _bbox_result(result):
+    if isinstance(result, tuple):
+        result = result[0]
+
+    bboxes = np.vstack(result)
     labels = [
         np.full(bbox.shape[0], i, dtype=np.int32)
-        for i, bbox in enumerate(bbox_result)
+        for i, bbox in enumerate(result)
     ]
     labels = np.concatenate(labels)
     return bboxes, labels
 
 
-def patch_detector(patch_size, model, img):
+def patch_detector(patch_size, model, img, device=None, test_pipeline=None):
     img_h, img_w, _ = img.shape
-
-    if patch_size > min(img_h, img_w):
-        return norm_detector(model, img)
-
     ys = split(img_h, patch_size)
     xs = split(img_w, patch_size)
 
-    bboxes_list = []
-    labels_list = []
-    for y in ys:
-        for x in xs:
-            sub_img = img[y: y + patch_size, x: x + patch_size]
-            bboxes, labels = norm_detector(model, sub_img)
-            bboxes += np.array([x, y, x, y, 0])
-            bboxes_list.append(bboxes)
-            labels_list.append(labels)
+    imgs = [img[y: y + patch_size, x: x + patch_size] for y in ys for x in xs]
+    results = inference_detector(model, imgs, device, test_pipeline)
+    results = [_bbox_result(r) for r in results]
+    bboxes_list, labels_list = zip(*results)
+
     bboxes = np.vstack(bboxes_list)
     labels = np.concatenate(labels_list)
     return bboxes, labels
@@ -78,13 +97,19 @@ def patch_detector(patch_size, model, img):
 def test_imgs(img_list, config, checkpoint, patch_size):
     config = Config.fromfile(config)
     config.merge_from_dict(eval(os.environ.get("CFG_OPTIONS", "{}")))
-    model = init_detector(config, checkpoint)
+    model = init_detector(config, checkpoint, device="cuda:0")
+    device = next(model.parameters()).device
     classes = model.CLASSES
+
+    cfg = model.cfg.copy()
+    test_pipeline = cfg.data.test.pipeline
+    test_pipeline[0].type = "LoadImageFromWebcam"
+    test_pipeline = Compose(test_pipeline)
 
     results = []
     for file_name in img_list:
         img = cv.imread(file_name, 1)
-        bboxes, labels = patch_detector(patch_size, model, img)
+        bboxes, labels = patch_detector(patch_size, model, img, device, test_pipeline)
 
         dt = []
         for i in range(bboxes.shape[0]):

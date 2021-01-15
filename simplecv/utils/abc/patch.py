@@ -8,7 +8,7 @@ IMG_EXTENSIONS = set([".jpg", ".jpeg", ".png", ".bmp"])
 
 
 def split(size, patch_size, overlap=64):
-    if patch_size > size:
+    if patch_size >= size:
         return [0]
 
     s = list(range(0, size - patch_size, patch_size - overlap))

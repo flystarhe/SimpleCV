@@ -7,7 +7,11 @@ import tornado.ioloop
 import tornado.web
 import traceback
 
-from mmdet.apis import init_detector, inference_detector
+import torch
+from mmcv.parallel import collate
+from mmcv.parallel import scatter
+from mmdet.apis import init_detector
+from mmdet.datasets.pipelines import Compose
 from mmdet.datasets.builder import PIPELINES
 from app_nms import clean_by_bbox
 
@@ -67,45 +71,60 @@ def xyxy2xywh(_bbox):
 
 
 def split(size, patch_size, overlap=64):
+    if patch_size >= size:
+        return [0]
+
     s = list(range(0, size - patch_size, patch_size - overlap))
     s.append(size - patch_size)
     return s
 
 
-def norm_detector(model, img):
-    result = inference_detector(model, img)
-    if isinstance(result, tuple):
-        bbox_result, _ = result
-    else:
-        bbox_result = result
+def inference_detector(model, imgs, device=None, test_pipeline=None):
+    # imgs (list[ndarray]): `[cv.imread(file_name, 1), ...]`
+    if device is None:
+        device = next(model.parameters()).device
 
-    bboxes = np.vstack(bbox_result)
+    if test_pipeline is None:
+        cfg = model.cfg.copy()
+        test_pipeline = cfg.data.test.pipeline
+        test_pipeline[0].type = "LoadImageFromWebcam"
+        test_pipeline = Compose(test_pipeline)
+
+    data = [test_pipeline(dict(img=img)) for img in imgs]
+    data = collate(data, samples_per_gpu=len(data))
+
+    # just get the actual data from DataContainer
+    data["img_metas"] = [img_metas.data[0] for img_metas in data["img_metas"]]
+    data["img"] = [img.data[0] for img in data["img"]]
+    data = scatter(data, [device])[0]
+    with torch.no_grad():
+        results = model(return_loss=False, rescale=True, **data)
+    return results
+
+
+def _bbox_result(result):
+    if isinstance(result, tuple):
+        result = result[0]
+
+    bboxes = np.vstack(result)
     labels = [
         np.full(bbox.shape[0], i, dtype=np.int32)
-        for i, bbox in enumerate(bbox_result)
+        for i, bbox in enumerate(result)
     ]
     labels = np.concatenate(labels)
     return bboxes, labels
 
 
-def patch_detector(patch_size, model, img):
+def patch_detector(patch_size, model, img, device=None, test_pipeline=None):
     img_h, img_w, _ = img.shape
-
-    if patch_size > min(img_h, img_w):
-        return norm_detector(model, img)
-
     ys = split(img_h, patch_size)
     xs = split(img_w, patch_size)
 
-    bboxes_list = []
-    labels_list = []
-    for y in ys:
-        for x in xs:
-            sub_img = img[y: y + patch_size, x: x + patch_size]
-            bboxes, labels = norm_detector(model, sub_img)
-            bboxes += np.array([x, y, x, y, 0])
-            bboxes_list.append(bboxes)
-            labels_list.append(labels)
+    imgs = [img[y: y + patch_size, x: x + patch_size] for y in ys for x in xs]
+    results = inference_detector(model, imgs, device, test_pipeline)
+    results = [_bbox_result(r) for r in results]
+    bboxes_list, labels_list = zip(*results)
+
     bboxes = np.vstack(bboxes_list)
     labels = np.concatenate(labels_list)
     return bboxes, labels
@@ -128,7 +147,9 @@ class Cache(object):
 
 
 model = None
+device = None
 classes = None
+test_pipeline = None
 patch_size = 999999
 clean_mode = "min"
 clean_param = 0.3
@@ -139,10 +160,10 @@ class MainHandler(tornado.web.RequestHandler):
 
     def get(self):
         try:
-            global model, classes, patch_size, clean_mode, clean_param
+            global model, device, classes, test_pipeline, patch_size, clean_mode, clean_param
 
             img = cv.imread(self.get_argument("image"), 1)
-            bboxes, labels = patch_detector(patch_size, model, img)
+            bboxes, labels = patch_detector(patch_size, model, img, device, test_pipeline)
 
             dt = []
             for i in range(bboxes.shape[0]):
@@ -178,7 +199,13 @@ if __name__ == "__main__":
     checkpoint_file = sys.argv[3]
 
     model = init_detector(config_file, checkpoint_file, device="cuda:0")
+    device = next(model.parameters()).device
     classes = model.CLASSES
+
+    cfg = model.cfg.copy()
+    test_pipeline = cfg.data.test.pipeline
+    test_pipeline[0].type = "LoadImageFromWebcam"
+    test_pipeline = Compose(test_pipeline)
 
     if len(sys.argv) >= 5:
         patch_size = sys.argv[4]
