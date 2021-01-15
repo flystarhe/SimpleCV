@@ -201,9 +201,9 @@ os.environ["CFG_OPTIONS"] = """
 
 ### test
 ```
+EXPERIMENT_NAME = "xxxx"
 FLAG = "xxxx"
 CONFIG_NAME = "xxxx"
-EXPERIMENT_NAME = "xxxx"
 DATA_ROOT = "/workspace/notebooks/xxxx"
 !mkdir -p data && rm -rf data/coco && ln -s {DATA_ROOT} data/coco
 os.environ["CFG_OPTIONS"] = "{}"
@@ -221,9 +221,9 @@ WORK_DIR
 
 ## mmdet/tools
 ```
+EXPERIMENT_NAME = "xxxx"
 FLAG = "xxxx"
 CONFIG_NAME = "xxxx"
-EXPERIMENT_NAME = "xxxx"
 DATA_ROOT = "/workspace/notebooks/xxxx"
 !mkdir -p data && rm -rf data/coco && ln -s {DATA_ROOT} data/coco
 MMDET_PATH = "/usr/src/mmdetection"
@@ -250,8 +250,8 @@ MY_SCRIPT = "{}/tools/dist_test.sh".format(MMDET_PATH)
 
 `tools/analyze_logs.py`:
 ```
-FLAG = "*"
 EXPERIMENT_NAME = "xxxx"
+FLAG = "*"
 MMDET_PATH = "/usr/src/mmdetection"
 
 import glob

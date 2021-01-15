@@ -116,13 +116,17 @@ def _bbox_result(result):
 
 
 def patch_detector(patch_size, model, img, device=None, test_pipeline=None):
-    img_h, img_w, _ = img.shape
+    img_h, img_w = img.shape[:2]
     ys = split(img_h, patch_size)
     xs = split(img_w, patch_size)
 
-    imgs = [img[y: y + patch_size, x: x + patch_size] for y in ys for x in xs]
-    results = inference_detector(model, imgs, device, test_pipeline)
-    results = [_bbox_result(r) for r in results]
+    results = []
+    batch_size = 8
+    xys = [(y, x) for y in ys for x in xs]
+    for i in range(0, len(xys), step=batch_size):
+        imgs = [img[y: y + patch_size, x: x + patch_size] for y, x in xys[i: i + batch_size]]
+        results.extend(inference_detector(model, imgs, device, test_pipeline))
+    results = [_bbox_result(result) for result in results]
     bboxes_list, labels_list = zip(*results)
 
     bboxes = np.vstack(bboxes_list)

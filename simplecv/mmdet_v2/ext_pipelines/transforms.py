@@ -67,7 +67,7 @@ class RandomCrop(object):
 
     def _crop_and_paste(self, patch, img):
         x1, y1, x2, y2 = patch
-        img_h, img_w, _ = img.shape
+        img_h, img_w = img.shape[:2]
 
         p1, x1 = (-x1, 0) if x1 < 0 else (0, x1)
         q1, y1 = (-y1, 0) if y1 < 0 else (0, y1)
