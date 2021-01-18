@@ -162,7 +162,7 @@ classes = None
 test_pipeline = None
 patch_size = 999999
 clean_mode = "min"
-clean_param = 0.3
+clean_param = 0.1
 cached = Cache()
 
 

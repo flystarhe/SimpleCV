@@ -139,7 +139,7 @@ def test_coco(data_root, coco_file, config, checkpoint, patch_size, gpus=4):
     outputs = []
     for gt, (file_name, dt) in zip(gts, results):
         outputs.append((file_name, None, None, dt, gt))
-    kwargs = dict(clean_mode="dist", clean_param=1.5, match_mode="iou", pos_iou_thr=0.3, min_pos_iou=0.1)
+    kwargs = dict(clean_mode="min", clean_param=0.1, match_mode="iou", pos_iou_thr=0.1, min_pos_iou=0.01)
     matrix_analysis_object(outputs, {"*": 0.5}, temp_file + ".object.csv", **kwargs)
     return io.save_pkl(outputs, temp_file)
 
