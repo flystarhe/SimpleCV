@@ -5,48 +5,31 @@ __MMDET_PATH = __os.environ["MMDET_PATH"]
 __CROP_SIZE = int(__os.environ["CROP_SIZE"])
 
 _base_ = [
-    __osp.join(__MMDET_PATH, 'configs/_base_/models/faster_rcnn_r50_fpn.py'),
+    __osp.join(__MMDET_PATH, 'configs/_base_/models/cascade_rcnn_r50_fpn.py'),
     __osp.join(__MMDET_PATH, 'configs/_base_/datasets/coco_detection.py'),
-    __osp.join(__MMDET_PATH, 'configs/_base_/schedules/schedule_2x.py'),
+    __osp.join(__MMDET_PATH, 'configs/_base_/schedules/schedule_1x.py'),
     __osp.join(__MMDET_PATH, 'configs/_base_/default_runtime.py'),
 ]
 
 model = dict(
-    pretrained='torchvision://resnet50',
+    pretrained='open-mmlab://resnext101_32x4d',
     backbone=dict(
-        type='ResNet',
-        depth=50))
+        type='ResNeXt',
+        depth=101,
+        groups=32,
+        base_width=4,
+        num_stages=4,
+        out_indices=(0, 1, 2, 3),
+        frozen_stages=1,
+        norm_cfg=dict(type='BN', requires_grad=True),
+        style='pytorch'))
 
 # image scale format: (w, h)
-albu_train_transforms = [
-    dict(
-        type='RandomBrightnessContrast',
-        brightness_limit=[0.1, 0.3],
-        contrast_limit=[0.1, 0.3],
-        p=0.2),
-    dict(type='JpegCompression', quality_lower=85, quality_upper=95, p=0.2),
-]
 img_norm_cfg = dict(
     mean=[123.675, 116.28, 103.53], std=[58.395, 57.12, 57.375], to_rgb=True)
 train_pipeline = [
     dict(type='LoadImageFromFile'),
     dict(type='LoadAnnotations', with_bbox=True),
-    dict(
-        type='Albu',
-        transforms=albu_train_transforms,
-        bbox_params=dict(
-            type='BboxParams',
-            format='pascal_voc',
-            label_fields=['gt_labels'],
-            min_visibility=0.0,
-            filter_lost_elements=True),
-        keymap={
-            'img': 'image',
-            'gt_masks': 'masks',
-            'gt_bboxes': 'bboxes'
-        },
-        update_pad_shape=False,
-        skip_img_without_anno=True),
     #dict(type='Resize2', test_mode=False, ratio_range=(0.8, 1.2)),
     dict(type='RandomCrop', height=__CROP_SIZE, width=__CROP_SIZE),
     dict(type='RandomFlip', flip_ratio=0.5),

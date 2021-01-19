@@ -7,7 +7,7 @@ __CROP_SIZE = int(__os.environ["CROP_SIZE"])
 _base_ = [
     __osp.join(__MMDET_PATH, 'configs/_base_/models/faster_rcnn_r50_fpn.py'),
     __osp.join(__MMDET_PATH, 'configs/_base_/datasets/coco_detection.py'),
-    __osp.join(__MMDET_PATH, 'configs/_base_/schedules/schedule_2x.py'),
+    __osp.join(__MMDET_PATH, 'configs/_base_/schedules/schedule_1x.py'),
     __osp.join(__MMDET_PATH, 'configs/_base_/default_runtime.py'),
 ]
 

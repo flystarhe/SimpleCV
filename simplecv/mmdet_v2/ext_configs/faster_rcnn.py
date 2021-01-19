@@ -7,7 +7,7 @@ __CROP_SIZE = int(__os.environ["CROP_SIZE"])
 _base_ = [
     __osp.join(__MMDET_PATH, 'configs/_base_/models/faster_rcnn_r50_fpn.py'),
     __osp.join(__MMDET_PATH, 'configs/_base_/datasets/coco_detection.py'),
-    __osp.join(__MMDET_PATH, 'configs/_base_/schedules/schedule_2x.py'),
+    __osp.join(__MMDET_PATH, 'configs/_base_/schedules/schedule_1x.py'),
     __osp.join(__MMDET_PATH, 'configs/_base_/default_runtime.py'),
 ]
 
@@ -15,9 +15,7 @@ model = dict(
     pretrained='torchvision://resnet50',
     backbone=dict(
         type='ResNet',
-        depth=50,
-        dcn=dict(type='DCNv2', deform_groups=1, fallback_on_stride=False),
-        stage_with_dcn=(False, True, True, True)))
+        depth=50))
 
 # image scale format: (w, h)
 img_norm_cfg = dict(
