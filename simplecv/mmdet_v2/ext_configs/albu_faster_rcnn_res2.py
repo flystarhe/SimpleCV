@@ -49,7 +49,7 @@ train_pipeline = [
         },
         update_pad_shape=False,
         skip_img_without_anno=True),
-    dict(type='Resize2', test_mode=False, ratio_range=(0.8, 1.2)),
+    #dict(type='Resize2', test_mode=False, ratio_range=(0.8, 1.2)),
     dict(type='RandomCrop', height=__CROP_SIZE, width=__CROP_SIZE),
     dict(type='RandomFlip', flip_ratio=0.5),
     dict(type='Normalize', **img_norm_cfg),

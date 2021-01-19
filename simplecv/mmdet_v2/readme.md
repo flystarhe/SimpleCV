@@ -22,7 +22,7 @@ docker save -o mmdet2.7-20.12.tar simplecv:mmdet2.7
 docker load -i mmdet2.7-20.12.tar
 
 docker run --gpus device=0 -d -p 9000:9000 --ipc=host --name test -v "$(pwd)":/workspace simplecv:mmdet2.7 [dev|ssh|app] \
-    /workspace/faster_rcnn_res1.py /workspace/latest.pth 999999 dist 1.5
+    /workspace/faster_rcnn_res.py /workspace/latest.pth 999999 dist 1.5
 ```
 
 `port config checkpoint [patch:int] [mode:str] [param:float]`:
@@ -61,7 +61,7 @@ EXPERIMENT_NAME
 ```
 os.environ["CROP_SIZE"] = "800"
 FLAG = "lr_1x_epochs_1x"
-CONFIG_NAME = "faster_rcnn_res1"
+CONFIG_NAME = "faster_rcnn_res"
 DATA_ROOT = "/workspace/notebooks/xxxx"
 !mkdir -p data && rm -rf data/coco && ln -s {DATA_ROOT} data/coco
 

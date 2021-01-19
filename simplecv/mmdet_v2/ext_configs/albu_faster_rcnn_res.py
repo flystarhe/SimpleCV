@@ -15,9 +15,7 @@ model = dict(
     pretrained='torchvision://resnet50',
     backbone=dict(
         type='ResNet',
-        depth=50,
-        dcn=dict(type='DCNv2', deform_groups=1, fallback_on_stride=False),
-        stage_with_dcn=(False, True, True, True)))
+        depth=50))
 
 # image scale format: (w, h)
 albu_train_transforms = [
@@ -49,7 +47,7 @@ train_pipeline = [
         },
         update_pad_shape=False,
         skip_img_without_anno=True),
-    dict(type='Resize2', test_mode=False, ratio_range=(0.8, 1.2)),
+    #dict(type='Resize2', test_mode=False, ratio_range=(0.8, 1.2)),
     dict(type='RandomCrop', height=__CROP_SIZE, width=__CROP_SIZE),
     dict(type='RandomFlip', flip_ratio=0.5),
     dict(type='Normalize', **img_norm_cfg),
