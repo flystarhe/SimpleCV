@@ -41,7 +41,6 @@ print(response.text)
 ```
 import os
 import glob
-import time
 
 MMDET_PATH = "/usr/src/mmdetection"
 SIMPLECV_PATH = "/workspace/SimpleCV"
@@ -51,8 +50,7 @@ os.environ["MMDET_PATH"] = MMDET_PATH
 os.environ["SIMPLECV_PATH"] = SIMPLECV_PATH
 
 os.environ["MKL_THREADING_LAYER"] = "GNU"
-EXPERIMENT_NAME = time.strftime("xxxx_%m%d_%H%M")
-EXPERIMENT_NAME
+EXPERIMENT_NAME = "PLAN_XXXX"
 ```
 
 >`%time !jupyter nbconvert --ExecutePreprocessor.timeout=-1 --to html --execute --allow-errors notebook.ipynb`
@@ -100,33 +98,13 @@ WORK_DIR
 "model":dict(pretrained="open-mmlab://resnext101_32x4d",backbone=dict(type="ResNeXt",depth=101,groups=32,base_width=4,num_stages=4,out_indices=(0,1,2,3),frozen_stages=1,norm_cfg=dict(type="BN",requires_grad=True),norm_eval=True,style="pytorch")),
 # vfnet
 "model":dict(pretrained="open-mmlab://resnext101_32x4d",backbone=dict(type="ResNeXt",depth=101,groups=32,base_width=4,num_stages=4,out_indices=(0,1,2,3),frozen_stages=1,norm_cfg=dict(type="BN",requires_grad=True),norm_eval=True,style="pytorch",dcn=dict(type="DCNv2",deform_groups=1,fallback_on_stride=False),stage_with_dcn=(False,True,True,True)),bbox_head=dict(dcn_on_last_conv=True)),
-# lr = 0.01 / 8 * batch_size, anchor scale range is [32, 256].
 ```
 
-纵横比`ratios=h/w`异常时：
+纵横比`ratios=h/w`异常大/小时：
 ```
 # crop_size=320,min_w_h=20,learn_factor=2.0
-"model.roi_head.bbox_roi_extractor.finest_scale":28,
-"train_cfg.rpn.assigner":dict(pos_iou_thr=0.7,neg_iou_thr=0.2,min_pos_iou=0.2,match_low_quality=True),
-"train_cfg.rcnn.assigner":dict(pos_iou_thr=0.5,neg_iou_thr=0.5,min_pos_iou=0.5,match_low_quality=True),
-# crop_size=320,min_w_h=20,learn_factor=1.5
-"model.roi_head.bbox_roi_extractor.finest_scale":28,
-"train_cfg.rpn.assigner":dict(pos_iou_thr=0.7,neg_iou_thr=0.2,min_pos_iou=0.2,match_low_quality=True),
-"train_cfg.rcnn.assigner":dict(pos_iou_thr=0.5,neg_iou_thr=0.3,min_pos_iou=0.3,match_low_quality=True),
-
-import numpy as np
-learn_factor = 2.0
-finest_scale = 28
-crop_size = 320
-min_side = 24
-
-print("scale: {:.2f}".format(np.sqrt(crop_size * min_side)))
-for base_size in [4, 8, 16, 32]:
-    finest_scale = finest_scale * 2
-    i = (base_size * 8) * np.sqrt(2) * min_side
-    u = (base_size * 8) ** 2 + (crop_size * min_side)
-    r1, r2 = i / (u - i), i * learn_factor / (u - i * learn_factor)
-    print("{:03d}, {:02d}, {:.2f}, {:.2f}".format(finest_scale, base_size, r1, r2))
+"model.train_cfg.rpn.assigner":dict(pos_iou_thr=0.7,neg_iou_thr=0.3,min_pos_iou=0.3,match_low_quality=True),
+"model.train_cfg.rcnn.assigner":dict(pos_iou_thr=0.5,neg_iou_thr=0.5,min_pos_iou=0.5,match_low_quality=False),
 ```
 
 尝试不同损失函数/权重：
@@ -187,6 +165,8 @@ os.environ["CFG_OPTIONS"] = """
 """
 ```
 
+>`lr = 0.01 / 8 * batch_size`, anchor scale range is `[32, 512]`.
+
 ### VarifocalNet
 ```
 os.environ["CFG_OPTIONS"] = """
@@ -210,7 +190,7 @@ os.environ["CFG_OPTIONS"] = """
 """
 ```
 
->`lr = 0.01 / 16 * batch_size`, anchor scale range is `[14, ?]`.
+>`lr = 0.01 / 16 * batch_size`, anchor scale range is `[14, 448]`.
 
 ### test
 ```
