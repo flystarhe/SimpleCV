@@ -16,8 +16,8 @@ class RandomCrop(object):
     """
 
     def __init__(self, height, width, p=1.0):
-        safe_area = max(width // 3, 96) ** 2
-        self.nonignore_area = safe_area
+        area = min(width // 3, 112) ** 2
+        self.nonignore_area = area
         self.height = height
         self.width = width
         self.p = p
@@ -55,10 +55,10 @@ class RandomCrop(object):
         dst_h = dst_bboxes[:, 3] - dst_bboxes[:, 1]
         dst_area = dst_w * dst_h
 
-        s1 = (dst_area >= src_area * 0.7)
+        s1 = (dst_area >= src_area * 0.75)
         s2 = (dst_area >= self.nonignore_area)
-        s3 = (dst_h >= src_h * 0.7) * (dst_w >= src_h * 1.5)
-        s4 = (dst_w >= src_w * 0.7) * (dst_h >= src_w * 1.5)
+        s3 = (dst_h >= src_h * 0.75) * (dst_w >= src_h * 1.5)
+        s4 = (dst_w >= src_w * 0.75) * (dst_h >= src_w * 1.5)
 
         dst = s1 + s2 + s3 + s4
         drop = np.logical_not(dst)
@@ -84,16 +84,19 @@ class RandomCrop(object):
         img_h, img_w, img_c = img.shape
         assert img_c == 3
 
+        if img_h <= self.height and img_w <= self.width:
+            return results
+
         if bboxes.shape[0] == 0:
             x_min, y_min, x_max, y_max = 0, 0, img_w, img_h
-            x_pad, y_pad = self.width // 2 - 64, self.height // 2 - 64
+            x_pad, y_pad = self.width // 2, self.height // 2
             patch = self._get_patch(x_min, y_min, x_max, y_max, x_pad, y_pad)
 
             dst_img = self._crop_and_paste(patch, img)
 
             cx, cy = self.width // 2, self.height // 2
             x1, y1, x2, y2 = cx - 32, cy - 32, cx + 32, cy + 32
-            dst_img[y1: y2, x1: x2] = dst_img[y1: y2, x1: x2] - 50
+            dst_img[y1: y2, x1: x2] = dst_img[y1: y2, x1: x2] - 100
             dst_bboxes = np.array([[x1, y1, x2, y2]], dtype=np.float32)  # man-made object
             dst_labels = np.array([0], dtype=np.int64)  # set the man-made object category in 1st
 
