@@ -74,23 +74,6 @@ os.environ["CFG_OPTIONS"] = """
     "data.test":dict(img_prefix="data/coco/",ann_file="data/coco/annotations_100/test.json"),
     "data.val":dict(img_prefix="data/coco/",ann_file="data/coco/annotations_100/val.json"),
     "data.samples_per_gpu":2,"data.workers_per_gpu":2,
-    "model.neck.in_channels":[256,512,1024,2048],
-    "model.neck.out_channels":256,
-    "model.neck.start_level":0,
-    "model.neck.num_outs":5,
-    "model.neck.add_extra_convs":"on_output",
-    "model.neck.relu_before_extra_convs":True,
-    "model.rpn_head.anchor_generator.scales":[8],
-    "model.rpn_head.anchor_generator.ratios":[0.5,1.0,2.0],
-    "model.rpn_head.anchor_generator.strides":[4,8,16,32,64],
-    "model.rpn_head.anchor_generator.base_sizes":[4,8,16,32,64],
-    "model.roi_head.bbox_roi_extractor.featmap_strides":[4,8,16,32],
-    "model.roi_head.bbox_roi_extractor.finest_scale":56,
-    "model.roi_head.bbox_head.num_classes":2,
-    "model":dict(pretrained="torchvision://resnet50",backbone=dict(type="ResNet",depth=50,out_indices=(0,1,2,3),frozen_stages=1)),
-    "train_cfg.rpn_proposal":dict(nms_across_levels=False,nms_pre=2000,nms_post=1000,max_num=1000,min_bbox_size=0),
-    "test_cfg.rpn":dict(nms_across_levels=False,nms_pre=1000,nms_post=1000,max_num=1000,min_bbox_size=0),
-    "test_cfg.rcnn":dict(score_thr=0.05,nms=dict(type="nms",iou_threshold=0.5),max_per_img=100),
 }
 """
 
@@ -109,10 +92,14 @@ WORK_DIR
 
 尝试不同主干网络：
 ```
+# faster_rcnn
 "model":dict(pretrained="torchvision://resnet50",backbone=dict(type="ResNet",depth=50,out_indices=(0,1,2,3),frozen_stages=1)),
 "model":dict(pretrained="torchvision://resnet101",backbone=dict(type="ResNet",depth=101,out_indices=(0,1,2,3),frozen_stages=1)),
-"model":dict(pretrained="open-mmlab://resnext101_32x4d",backbone=dict(type="ResNeXt",depth=101,groups=32,base_width=4,num_stages=4,out_indices=(0,1,2,3),frozen_stages=1,norm_cfg=dict(type="BN",requires_grad=True),style="pytorch")),
-"model":dict(pretrained="open-mmlab://resnext101_64x4d",backbone=dict(type="ResNeXt",depth=101,groups=64,base_width=4,num_stages=4,out_indices=(0,1,2,3),frozen_stages=1,norm_cfg=dict(type="BN",requires_grad=True),style="pytorch")),
+"model":dict(pretrained="open-mmlab://resnext101_32x4d",backbone=dict(type="ResNeXt",depth=101,groups=32,base_width=4,num_stages=4,out_indices=(0,1,2,3),frozen_stages=1,norm_cfg=dict(type="BN",requires_grad=True),norm_eval=True,style="pytorch")),
+# cascade_rcnn
+"model":dict(pretrained="open-mmlab://resnext101_32x4d",backbone=dict(type="ResNeXt",depth=101,groups=32,base_width=4,num_stages=4,out_indices=(0,1,2,3),frozen_stages=1,norm_cfg=dict(type="BN",requires_grad=True),norm_eval=True,style="pytorch")),
+# vfnet
+"model":dict(pretrained="open-mmlab://resnext101_32x4d",backbone=dict(type="ResNeXt",depth=101,groups=32,base_width=4,num_stages=4,out_indices=(0,1,2,3),frozen_stages=1,norm_cfg=dict(type="BN",requires_grad=True),norm_eval=True,style="pytorch",dcn=dict(type="DCNv2",deform_groups=1,fallback_on_stride=False),stage_with_dcn=(False,True,True,True)),bbox_head=dict(dcn_on_last_conv=True)),
 # lr = 0.01 / 8 * batch_size, anchor scale range is [32, 256].
 ```
 
@@ -168,14 +155,40 @@ mmdet/models/roi_heads/roi_extractors/single_level_roi_extractor.py
 - scale >= finest_scale * 8: level 3
 ```
 
+### Faster R-CNN
+```
+os.environ["CFG_OPTIONS"] = """
+{
+    "optimizer.lr":0.005,"total_epochs":12,
+    "lr_config":dict(_delete_=True,policy="step",warmup="linear",warmup_iters=500,warmup_ratio=0.001,step=[8,11]),
+    "evaluation.interval":12,"evaluation.metric":"bbox","log_config.interval":30,
+    "data.train":dict(img_prefix="data/coco/",ann_file="data/coco/annotations_100/train.json"),
+    "data.test":dict(img_prefix="data/coco/",ann_file="data/coco/annotations_100/test.json"),
+    "data.val":dict(img_prefix="data/coco/",ann_file="data/coco/annotations_100/val.json"),
+    "data.samples_per_gpu":2,"data.workers_per_gpu":2,
+    "model.neck.in_channels":[256,512,1024,2048],
+    "model.neck.out_channels":256,
+    "model.neck.start_level":0,
+    "model.neck.num_outs":5,
+    "model.neck.add_extra_convs":"on_output",
+    "model.neck.relu_before_extra_convs":True,
+    "model.rpn_head.anchor_generator.scales":[8],
+    "model.rpn_head.anchor_generator.ratios":[0.5,1.0,2.0],
+    "model.rpn_head.anchor_generator.strides":[4,8,16,32,64],
+    "model.rpn_head.anchor_generator.base_sizes":[4,8,16,32,64],
+    "model.roi_head.bbox_roi_extractor.featmap_strides":[4,8,16,32],
+    "model.roi_head.bbox_roi_extractor.finest_scale":56,
+    "model.roi_head.bbox_head.num_classes":2,
+    "model":dict(pretrained="torchvision://resnet50",backbone=dict(type="ResNet",depth=50,out_indices=(0,1,2,3),frozen_stages=1)),
+    "train_cfg.rpn_proposal":dict(nms_across_levels=False,nms_pre=2000,nms_post=1000,max_num=1000,min_bbox_size=0),
+    "test_cfg.rpn":dict(nms_across_levels=False,nms_pre=1000,nms_post=1000,max_num=1000,min_bbox_size=0),
+    "test_cfg.rcnn":dict(score_thr=0.05,nms=dict(type="nms",iou_threshold=0.5),max_per_img=100),
+}
+"""
+```
+
 ### VarifocalNet
 ```
-os.environ["CROP_SIZE"] = "800"
-FLAG = "lr_1x_epochs_1x"
-CONFIG_NAME = "vfnet_r50"
-DATA_ROOT = "/workspace/notebooks/xxxx"
-!mkdir -p data && rm -rf data/coco && ln -s {DATA_ROOT} data/coco
-
 os.environ["CFG_OPTIONS"] = """
 {
     "optimizer.lr":0.0025,"total_epochs":12,
