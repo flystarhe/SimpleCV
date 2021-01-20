@@ -1,5 +1,4 @@
 import cv2 as cv
-import numpy as np
 import os
 
 from enum import Enum
@@ -21,7 +20,7 @@ def draw_bbox(anns, img, top, color_val):
         x, y, w, h = [int(v) for v in ann["bbox"]]
         left_bottom = (x, y - 2) if top else (x, y + h + 30)
         text = "{}: {}: {:.2f}: {}/{}={:.2f}".format(
-            i, ann["label"], ann.get("score", 1.0), h, w, np.sqrt(h / w))
+            i, ann["label"], ann.get("score", 1.0), h, w, h / w)
         cv.rectangle(img, (x, y), (x + w, y + h), color_val, thickness=1)
         cv.putText(img, text, left_bottom, cv.FONT_HERSHEY_COMPLEX, 1.0, color_val)
     return img
@@ -53,7 +52,7 @@ def image_show(out_dirs, ori_file, dt, gt, dt_mask=None, gt_mask=None):
     for i, d in enumerate(dt, 1):
         x, y, w, h = [int(v) for v in d["bbox"]]
         text = "{}: {}: {}: {:.2f}: {}/{}={:.2f}".format(
-            i, (x, y), d["label"], d.get("score", 1.0), h, w, np.sqrt(h / w))
+            i, (x, y), d["label"], d.get("score", 1.0), h, w, h / w)
         cv.putText(out_img, text, (50, 90 + 30 * i), cv.FONT_HERSHEY_COMPLEX, 1.0, Color.blue.value)
 
     draw_bbox(dt, out_img, True, Color.red.value)
