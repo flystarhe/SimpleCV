@@ -34,7 +34,7 @@ def gen_multi_labels(anns, simple=True):
 def agent_split(x, q):
     if len(x) == 0:
         return 0, [0 for _ in q]
-    return len(x), np.quantile(x, q)
+    return len(x), np.quantile(x, q, interpolation="higher")
 
 
 def list2str(lst, fmt="{}"):

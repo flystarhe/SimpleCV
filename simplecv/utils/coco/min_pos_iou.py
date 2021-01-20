@@ -31,7 +31,7 @@ def min_pos_iou(coco_file, crop_size=800, scale=8):
         data.append(max_iou(w, h, anchors))
 
     q = [i / 10 for i in range(0, 10)]
-    res = np.quantile(data, q)
+    res = np.quantile(data, q, interpolation="higher")
 
     print(["{:.2f}:{:.2f}".format(a, b) for a, b in zip(q, res)])
 
