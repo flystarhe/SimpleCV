@@ -1,6 +1,7 @@
 # mmdet v2
 * Tested on [mmdetection v2.6.0](https://github.com/open-mmlab/mmdetection) commit `bd3306f`.
 * Tested on [mmdetection v2.7.0](https://github.com/open-mmlab/mmdetection) commit `3e902c3`.
+* `pip install mmcv-full==1.2.5+torch1.6.0+cu101 -f https://openmmlab.oss-accelerate.aliyuncs.com/mmcv/dist/index.html`
 
 ## environs
 * Set environment variables `MMDET_PATH` and `SIMPLECV_PATH`
