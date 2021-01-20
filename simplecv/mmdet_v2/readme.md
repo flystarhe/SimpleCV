@@ -137,13 +137,6 @@ mmdet/models/roi_heads/roi_extractors/single_level_roi_extractor.py
 ```
 os.environ["CFG_OPTIONS"] = """
 {
-    "optimizer.lr":0.005,"total_epochs":12,
-    "lr_config":dict(_delete_=True,policy="step",warmup="linear",warmup_iters=500,warmup_ratio=0.001,step=[8,11]),
-    "evaluation.interval":12,"evaluation.metric":"bbox","log_config.interval":30,
-    "data.train":dict(img_prefix="data/coco/",ann_file="data/coco/annotations_100/train.json"),
-    "data.test":dict(img_prefix="data/coco/",ann_file="data/coco/annotations_100/test.json"),
-    "data.val":dict(img_prefix="data/coco/",ann_file="data/coco/annotations_100/val.json"),
-    "data.samples_per_gpu":2,"data.workers_per_gpu":2,
     "model.neck.in_channels":[256,512,1024,2048],
     "model.neck.out_channels":256,
     "model.neck.start_level":0,
@@ -158,11 +151,20 @@ os.environ["CFG_OPTIONS"] = """
     "model.roi_head.bbox_roi_extractor.finest_scale":56,
     "model.roi_head.bbox_head.num_classes":2,
     "model":dict(pretrained="torchvision://resnet50",backbone=dict(type="ResNet",depth=50,out_indices=(0,1,2,3),frozen_stages=1)),
-    "train_cfg.rpn_proposal":dict(nms_across_levels=False,nms_pre=2000,nms_post=1000,max_num=1000,min_bbox_size=0),
-    "test_cfg.rpn":dict(nms_across_levels=False,nms_pre=1000,nms_post=1000,max_num=1000,min_bbox_size=0),
-    "test_cfg.rcnn":dict(score_thr=0.05,nms=dict(type="nms",iou_threshold=0.5),max_per_img=100),
 }
 """
+```
+
+>`lr = 0.01 / 8 * batch_size`, anchor scale range is `[32, 512]`.
+
+### Cascade R-CNN
+```
+os.environ["CFG_OPTIONS"] = """
+{
+    "model.roi_head.bbox_head.0":dict(num_classes=2),
+    "model.roi_head.bbox_head.1":dict(num_classes=2),
+    "model.roi_head.bbox_head.2":dict(num_classes=2),
+}
 ```
 
 >`lr = 0.01 / 8 * batch_size`, anchor scale range is `[32, 512]`.
@@ -171,13 +173,6 @@ os.environ["CFG_OPTIONS"] = """
 ```
 os.environ["CFG_OPTIONS"] = """
 {
-    "optimizer.lr":0.0025,"total_epochs":12,
-    "lr_config":dict(_delete_=True,policy="step",warmup="linear",warmup_iters=500,warmup_ratio=0.001,step=[8,11]),
-    "evaluation.interval":12,"evaluation.metric":"bbox","log_config.interval":30,
-    "data.train":dict(img_prefix="data/coco/",ann_file="data/coco/annotations_100/train.json"),
-    "data.test":dict(img_prefix="data/coco/",ann_file="data/coco/annotations_100/test.json"),
-    "data.val":dict(img_prefix="data/coco/",ann_file="data/coco/annotations_100/val.json"),
-    "data.samples_per_gpu":2,"data.workers_per_gpu":2,
     "model.neck.in_channels":[256,512,1024,2048],
     "model.neck.out_channels":256,
     "model.neck.start_level":1,
