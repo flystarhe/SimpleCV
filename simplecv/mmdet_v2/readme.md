@@ -104,8 +104,7 @@ WORK_DIR
 纵横比`ratios=h/w`异常大/小时：
 ```
 # crop_size=320,min_w_h=20,learn_factor=2.0
-"model.train_cfg.rpn.assigner":dict(pos_iou_thr=0.7,neg_iou_thr=0.3,min_pos_iou=0.3,match_low_quality=True),
-"model.train_cfg.rcnn.assigner":dict(pos_iou_thr=0.5,neg_iou_thr=0.5,min_pos_iou=0.5,match_low_quality=False),
+"train_cfg.rpn.assigner":dict(pos_iou_thr=0.7,neg_iou_thr=0.3,min_pos_iou=0.3,match_low_quality=True),
 ```
 
 尝试不同损失函数/权重：
