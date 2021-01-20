@@ -275,6 +275,6 @@ output_dir = str(Path(pkl_file).parent) + "-viz"
 kwargs = dict(show=False, clean_mode="min", clean_param=0.1, match_mode="iou", pos_iou_thr=0.1, min_pos_iou=0.01)
 display_hardmini(pkl_file, score_thr, output_dir, simple=True, **kwargs)
 
-kwargs = dict(clean_mode="min", clean_param=0.1)
-display_dataset(pkl_file, score_thr, output_dir, simple=False, **kwargs)
+kwargs = dict(clean_mode="min", clean_param=0.3)
+display_dataset(pkl_file, score_thr, output_dir, simple=True, **kwargs)
 ```
