@@ -4,7 +4,7 @@ import os.path as __osp
 __MMDET_PATH = __os.environ["MMDET_PATH"]
 __CROP_SIZE = int(__os.environ["CROP_SIZE"])
 
-_base_ = __osp.join(__MMDET_PATH, 'configs/vfnet/vfnet_r50_fpn_1x_coco.py')
+_base_ = __osp.join(__MMDET_PATH, 'configs/vfnet/vfnet_r50_fpn_mdconv_c3-c5_mstrain_2x_coco.py')
 
 model = dict(
     pretrained='torchvision://resnet50',

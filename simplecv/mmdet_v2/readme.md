@@ -95,10 +95,11 @@ WORK_DIR
 "model":dict(pretrained="torchvision://resnet50",backbone=dict(type="ResNet",depth=50,out_indices=(0,1,2,3),frozen_stages=1)),
 "model":dict(pretrained="torchvision://resnet101",backbone=dict(type="ResNet",depth=101,out_indices=(0,1,2,3),frozen_stages=1)),
 "model":dict(pretrained="open-mmlab://resnext101_32x4d",backbone=dict(type="ResNeXt",depth=101,groups=32,base_width=4,num_stages=4,out_indices=(0,1,2,3),frozen_stages=1,norm_cfg=dict(type="BN",requires_grad=True),norm_eval=True,style="pytorch")),
+"model":dict(pretrained="open-mmlab://res2net101_v1d_26w_4s",backbone=dict(type="Res2Net",depth=101,scales=4,base_width=26,num_stages=4,out_indices=(0,1,2,3),frozen_stages=1,norm_cfg=dict(type="BN",requires_grad=True),norm_eval=True,style="pytorch")),
 # cascade_rcnn
 "model":dict(pretrained="open-mmlab://resnext101_32x4d",backbone=dict(type="ResNeXt",depth=101,groups=32,base_width=4,num_stages=4,out_indices=(0,1,2,3),frozen_stages=1,norm_cfg=dict(type="BN",requires_grad=True),norm_eval=True,style="pytorch")),
 # vfnet
-"model":dict(pretrained="open-mmlab://resnext101_32x4d",backbone=dict(type="ResNeXt",depth=101,groups=32,base_width=4,num_stages=4,out_indices=(0,1,2,3),frozen_stages=1,norm_cfg=dict(type="BN",requires_grad=True),norm_eval=True,style="pytorch",dcn=dict(type="DCNv2",deform_groups=1,fallback_on_stride=False),stage_with_dcn=(False,True,True,True)),bbox_head=dict(dcn_on_last_conv=True)),
+"model":dict(pretrained="open-mmlab://resnext101_32x4d",backbone=dict(type="ResNeXt",depth=101,groups=32,base_width=4,num_stages=4,out_indices=(0,1,2,3),frozen_stages=1,norm_cfg=dict(type="BN",requires_grad=True),norm_eval=True,style="pytorch")),
 ```
 
 纵横比`ratios=h/w`异常大/小时：
@@ -275,6 +276,6 @@ output_dir = str(Path(pkl_file).parent) + "-viz"
 kwargs = dict(show=False, clean_mode="min", clean_param=0.1, match_mode="iou", pos_iou_thr=0.1, min_pos_iou=0.01)
 display_hardmini(pkl_file, score_thr, output_dir, simple=True, **kwargs)
 
-kwargs = dict(clean_mode="min", clean_param=0.3)
+kwargs = dict(clean_mode="min", clean_param=0.1)
 display_dataset(pkl_file, score_thr, output_dir, simple=True, **kwargs)
 ```
