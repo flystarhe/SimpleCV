@@ -7,7 +7,7 @@ from pathlib import Path
 IMG_EXTENSIONS = set([".jpg", ".jpeg", ".png", ".bmp"])
 
 
-def split(size, patch_size, overlap=64):
+def split(size, patch_size, overlap=96):
     if patch_size >= size:
         return [0]
 

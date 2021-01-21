@@ -23,7 +23,7 @@ docker save -o mmdet2.7-20.12.tar simplecv:mmdet2.7
 docker load -i mmdet2.7-20.12.tar
 
 docker run --gpus device=0 -d -p 9000:9000 --ipc=host --name test -v "$(pwd)":/workspace simplecv:mmdet2.7 [dev|ssh|app] \
-    /workspace/faster_rcnn.py /workspace/latest.pth 576 dist 2.0
+    /workspace/faster_rcnn.py /workspace/latest.pth 608 dist 2.0
 ```
 
 `port config checkpoint [patch:int] [mode:str] [param:float]`:
@@ -197,7 +197,7 @@ CONFIG = "{}/{}.py".format(WORK_DIR, CONFIG_NAME)
 CHECKPOINT = "{}/latest.pth".format(WORK_DIR)
 
 MY_SCRIPT = "{}/simplecv/mmdet_v2/py_test.py".format(SIMPLECV_PATH)
-ARG_TEST = "{} {} {} {} 999999 --gpus 2".format(DATA_ROOT, "annotations_100/test.json", CONFIG, CHECKPOINT)
+ARG_TEST = "{} {} {} {} 608 --gpus 2".format(DATA_ROOT, "annotations_100/test.json", CONFIG, CHECKPOINT)
 
 !PYTHONPATH={SIMPLECV_PATH}:{MMDET_PATH} python {MY_SCRIPT} {ARG_TEST}
 WORK_DIR
