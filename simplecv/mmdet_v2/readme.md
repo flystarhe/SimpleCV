@@ -23,7 +23,7 @@ docker save -o mmdet2.7-20.12.tar simplecv:mmdet2.7
 docker load -i mmdet2.7-20.12.tar
 
 docker run --gpus device=0 -d -p 9000:9000 --ipc=host --name test -v "$(pwd)":/workspace simplecv:mmdet2.7 [dev|ssh|app] \
-    /workspace/faster_rcnn.py /workspace/latest.pth 999999 dist 1.5
+    /workspace/faster_rcnn.py /workspace/latest.pth 576 dist 2.0
 ```
 
 `port config checkpoint [patch:int] [mode:str] [param:float]`:
@@ -58,7 +58,7 @@ EXPERIMENT_NAME = "PLAN_XXXX"
 
 ## train
 ```
-os.environ["CROP_SIZE"] = "800"
+os.environ["CROP_SIZE"] = "640"
 FLAG = "lr_1x_epochs_1x"
 CONFIG_NAME = "faster_rcnn"
 DATA_ROOT = "/workspace/notebooks/xxxx"
@@ -66,13 +66,13 @@ DATA_ROOT = "/workspace/notebooks/xxxx"
 
 os.environ["CFG_OPTIONS"] = """
 {
-    "optimizer.lr":0.005,"total_epochs":12,
+    "optimizer.lr":0.01,"total_epochs":12,
     "lr_config":dict(_delete_=True,policy="step",warmup="linear",warmup_iters=500,warmup_ratio=0.001,step=[8,11]),
     "evaluation.interval":12,"evaluation.metric":"bbox","log_config.interval":30,
     "data.train":dict(img_prefix="data/coco/",ann_file="data/coco/annotations_100/train.json"),
     "data.test":dict(img_prefix="data/coco/",ann_file="data/coco/annotations_100/test.json"),
     "data.val":dict(img_prefix="data/coco/",ann_file="data/coco/annotations_100/val.json"),
-    "data.samples_per_gpu":2,"data.workers_per_gpu":2,
+    "data.samples_per_gpu":4,"data.workers_per_gpu":4,
 }
 """
 
@@ -91,15 +91,11 @@ WORK_DIR
 
 尝试不同主干网络：
 ```
-# faster_rcnn
-"model":dict(pretrained="torchvision://resnet50",backbone=dict(type="ResNet",depth=50,out_indices=(0,1,2,3),frozen_stages=1)),
-"model":dict(pretrained="torchvision://resnet101",backbone=dict(type="ResNet",depth=101,out_indices=(0,1,2,3),frozen_stages=1)),
-"model":dict(pretrained="open-mmlab://resnext101_32x4d",backbone=dict(type="ResNeXt",depth=101,groups=32,base_width=4,num_stages=4,out_indices=(0,1,2,3),frozen_stages=1,norm_cfg=dict(type="BN",requires_grad=True),norm_eval=True,style="pytorch")),
-"model":dict(pretrained="open-mmlab://res2net101_v1d_26w_4s",backbone=dict(type="Res2Net",depth=101,scales=4,base_width=26,num_stages=4,out_indices=(0,1,2,3),frozen_stages=1,norm_cfg=dict(type="BN",requires_grad=True),norm_eval=True,style="pytorch")),
-# cascade_rcnn
-"model":dict(pretrained="open-mmlab://resnext101_32x4d",backbone=dict(type="ResNeXt",depth=101,groups=32,base_width=4,num_stages=4,out_indices=(0,1,2,3),frozen_stages=1,norm_cfg=dict(type="BN",requires_grad=True),norm_eval=True,style="pytorch")),
-# vfnet
-"model":dict(pretrained="open-mmlab://resnext101_32x4d",backbone=dict(type="ResNeXt",depth=101,groups=32,base_width=4,num_stages=4,out_indices=(0,1,2,3),frozen_stages=1,norm_cfg=dict(type="BN",requires_grad=True),norm_eval=True,style="pytorch")),
+# faster_rcnn, cascade_rcnn, vfnet_r50
+"model":dict(pretrained="torchvision://resnet50",backbone=dict(type="ResNet",depth=50,num_stages=4,out_indices=(0,1,2,3),frozen_stages=1)),
+"model":dict(pretrained="torchvision://resnet101",backbone=dict(type="ResNet",depth=101,num_stages=4,out_indices=(0,1,2,3),frozen_stages=1)),
+"model":dict(pretrained="open-mmlab://resnext101_32x4d",backbone=dict(type="ResNeXt",depth=101,groups=32,base_width=4,num_stages=4,out_indices=(0,1,2,3),frozen_stages=1)),
+"model":dict(pretrained="open-mmlab://res2net101_v1d_26w_4s",backbone=dict(type="Res2Net",depth=101,scales=4,base_width=26,num_stages=4,out_indices=(0,1,2,3),frozen_stages=1)),
 ```
 
 纵横比`ratios=h/w`异常大/小时：
@@ -151,7 +147,6 @@ os.environ["CFG_OPTIONS"] = """
     "model.roi_head.bbox_roi_extractor.featmap_strides":[4,8,16,32],
     "model.roi_head.bbox_roi_extractor.finest_scale":56,
     "model.roi_head.bbox_head.num_classes":2,
-    "model":dict(pretrained="torchvision://resnet50",backbone=dict(type="ResNet",depth=50,out_indices=(0,1,2,3),frozen_stages=1)),
 }
 """
 ```
