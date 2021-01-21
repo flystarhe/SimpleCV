@@ -55,6 +55,8 @@ class RandomCrop(object):
         dst_h = dst_bboxes[:, 3] - dst_bboxes[:, 1]
         dst_area = dst_w * dst_h
 
+        inner = (dst_w >= 4) * (dst_h >= 4) * (dst_area >= 64)
+
         s1 = (dst_area >= src_area * 0.75)
         s2 = (dst_area >= self.nonignore_area)
         s3 = (dst_h >= src_h * 0.75) * (dst_w >= src_h * 1.5)
@@ -62,7 +64,6 @@ class RandomCrop(object):
 
         dst = s1 + s2 + s3 + s4
         drop = np.logical_not(dst)
-        inner = (dst_w > 1) * (dst_h > 1)
         return (dst * inner), (drop * inner)
 
     def _crop_and_paste(self, patch, img):
@@ -84,12 +85,9 @@ class RandomCrop(object):
         img_h, img_w, img_c = img.shape
         assert img_c == 3
 
-        if img_h <= self.height and img_w <= self.width:
-            return results
-
         if bboxes.shape[0] == 0:
             x_min, y_min, x_max, y_max = 0, 0, img_w, img_h
-            x_pad, y_pad = self.width // 2, self.height // 2
+            x_pad, y_pad = self.width // 2 - 32, self.height // 2 - 32
             patch = self._get_patch(x_min, y_min, x_max, y_max, x_pad, y_pad)
 
             dst_img = self._crop_and_paste(patch, img)
@@ -106,6 +104,9 @@ class RandomCrop(object):
             results["pad_shape"] = dst_img.shape
             results["gt_bboxes"] = dst_bboxes
             results["gt_labels"] = dst_labels
+            return results
+
+        if img_h <= self.height and img_w <= self.width:
             return results
 
         bboxes = bboxes.astype("int64")

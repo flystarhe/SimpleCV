@@ -107,7 +107,9 @@ def clean_by_bbox(dt, mode="min", param=0.1):
     dt = copy.deepcopy(dt)
 
     for d in dt:
-        cache[d["label"]].append(d)
+        _, _, w, h = d["bbox"]
+        if w * h >= 64:
+            cache[d["label"]].append(d)
 
     dt_ = []
     for v in cache.values():
