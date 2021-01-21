@@ -34,7 +34,7 @@ def xyxy2xywh(_bbox):
     ]
 
 
-def split(size, patch_size, overlap=96):
+def split(size, patch_size, overlap=128):
     if patch_size >= size:
         return [0]
 
