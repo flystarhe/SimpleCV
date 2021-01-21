@@ -70,7 +70,7 @@ def format_missed_false_pos(total_gt, total_pos, score_missed, score_false_pos, 
 
     lines = []
     if isinstance(q, int):
-        q = [i / q for i in range(1, q)]
+        q = [i / q for i in range(0, q + 1)]
 
     for label in labels:
         i_missed, q_missed = agent_split(score_missed[label], q)

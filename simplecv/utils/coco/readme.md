@@ -32,8 +32,8 @@ coco_dir = builder.build_dataset(cvt_dir, code_mapping)
 res = selection.split_dataset(coco_dir, seed=100, train_size=300, single_cls=True)
 print("summary:\n", coco_dir, list(map(len, res)))
 
-from simplecv.utils.coco import min_pos_iou
-min_pos_iou.min_pos_iou(coco_dir + "/coco.json", crop_size=800, scale=8)
+from simplecv.utils.coco import analyze_bbox
+analyze_bbox.bbox_quantile(coco_dir + "/coco.json", crop_size=640, scales=[8], ratios=[0.5, 1.0, 2.0])
 
 from simplecv.utils.coco import analyze_anchor
 analyze_anchor.do_analyze(coco_dir + "/coco.json")
