@@ -66,37 +66,62 @@ def inference_detector(model, imgs, device=None, test_pipeline=None):
     return results
 
 
-def _bbox_result(result, offset=None):
+def _bbox_result(result, offset, limit):
     if isinstance(result, tuple):
         result = result[0]
 
-    if offset is None:
-        offset = 0.
-
-    bboxes = np.vstack(result)
+    bboxes = np.vstack(result) + offset
     labels = [
         np.full(bbox.shape[0], i, dtype=np.int32)
         for i, bbox in enumerate(result)
     ]
     labels = np.concatenate(labels)
-    return bboxes + offset, labels
+
+    x_min, y_min, x_max, y_max = limit
+    s1 = (bboxes[:, 0] > x_max) + (bboxes[:, 1] > y_max)
+    s2 = (bboxes[:, 2] < x_min) + (bboxes[:, 3] < y_min)
+    mask = np.logical_not(s1 + s2)
+
+    return bboxes[mask], labels[mask]
+
+
+def _best_range(patch_size, overlap, img_w, img_h, x, y):
+    x_min, x_max = x, x + patch_size
+    y_min, y_max = y, y + patch_size
+
+    half = overlap // 2
+
+    if x_min > 0:
+        x_min += half
+    if y_min > 0:
+        y_min += half
+    if x_max < img_w:
+        x_max -= half
+    if y_max < img_h:
+        y_max -= half
+
+    return x_min, y_min, x_max, y_max
 
 
 def patch_detector(patch_size, model, img, device=None, test_pipeline=None):
+    overlap = 128
+    batch_size = 8
+
     img_h, img_w = img.shape[:2]
-    ys = split(img_h, patch_size)
-    xs = split(img_w, patch_size)
+    ys = split(img_h, patch_size, overlap)
+    xs = split(img_w, patch_size, overlap)
+    yxs = [(y, x) for y in ys for x in xs]
 
     results = []
-    offsets = []
-    batch_size = 8
-    xys = [(y, x) for y in ys for x in xs]
-    for i in range(0, len(xys), batch_size):
-        imgs = [img[y: y + patch_size, x: x + patch_size] for y, x in xys[i: i + batch_size]]
-        offsets.extend([np.array([x, y, x, y, 0.]) for y, x in xys[i: i + batch_size]])
+    for i in range(0, len(yxs), batch_size):
+        imgs = [img[y: y + patch_size, x: x + patch_size] for y, x in yxs[i: i + batch_size]]
         results.extend(inference_detector(model, imgs, device, test_pipeline))
 
-    results = [_bbox_result(result, offset) for result, offset in zip(results, offsets)]
+    assert len(results) == len(yxs)
+    offsets = np.array([[x, y, x, y, 0.] for y, x in yxs], dtype=np.float32)
+    limits = np.array([_best_range(patch_size, overlap, img_w, img_h, x, y) for y, x in yxs], dtype=np.float32)
+
+    results = [_bbox_result(results[i], offsets[i], limits[i]) for i in range(len(results))]
     bboxes_list, labels_list = zip(*results)
 
     bboxes = np.vstack(bboxes_list)

@@ -15,7 +15,9 @@ model = dict(
     pretrained='torchvision://resnet50',
     backbone=dict(
         type='ResNet',
-        depth=50))
+        depth=50,
+        dcn=dict(type='DCNv2', deform_groups=1, fallback_on_stride=False),
+        stage_with_dcn=(False, True, True, True)))
 
 # image scale format: (w, h)
 img_norm_cfg = dict(
