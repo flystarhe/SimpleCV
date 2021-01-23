@@ -58,7 +58,7 @@ def do_filter(img_dir, ann_dir, ext_file):
     if isinstance(ext_file, str):
         targets = []
         if ext_file.endswith(".csv"):
-            targets = pd.read_csv(ann_dir)["file_name"].to_list()
+            targets = pd.read_csv(ext_file)["file_name"].to_list()
         elif ext_file.endswith(".json"):
             targets = [img["file_name"] for img in load_json(ext_file)["images"]]
 
