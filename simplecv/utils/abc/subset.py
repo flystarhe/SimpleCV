@@ -32,7 +32,7 @@ def _copyfile(src_file, out_dir):
     return str(dst_file)
 
 
-def do_dataset(root, mode="coco", out_dir=None, **kwargs):
+def todo(root, mode="coco", out_dir=None, **kwargs):
     assert mode in SUPPORT_MODES
 
     if out_dir is None:

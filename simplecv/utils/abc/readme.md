@@ -39,5 +39,5 @@ if SIMPLECV_PATH not in sys.path:
 from simplecv.utils.abc import subset
 src_dir = "xxx"
 dst_dir = "xxx"
-subset.do_dataset(src_dir, "coco", dst_dir, "annotations_100/train.json")
+subset.todo(src_dir, "coco", dst_dir, json_file="annotations_100/train.json")
 ```
