@@ -12,6 +12,12 @@ ANN_EXTENSIONS = set([".xml", ".json"])
 IMG_EXTENSIONS = set([".jpg", ".jpeg", ".png", ".bmp"])
 
 
+def load_json(json_file):
+    with open(json_file, "r") as f:
+        data = json.load(f)
+    return data
+
+
 def save_json(data, json_file):
     with open(json_file, "w") as f:
         json.dump(data, f, indent=4)
@@ -41,8 +47,7 @@ def to_json(xml_path):
     return save_json(data, xml_path.with_suffix(".json").as_posix())
 
 
-def do_filter(img_dir, ann_dir, csv_file):
-    # `dataset name` format `xxxx_yymmdd`
+def do_filter(img_dir, ann_dir, ext_file):
     img_list = sorted(Path(img_dir).glob("**/*"))
 
     if ann_dir is not None:
@@ -50,8 +55,13 @@ def do_filter(img_dir, ann_dir, csv_file):
     else:
         ann_list = img_list
 
-    if csv_file is not None:
-        targets = pd.read_csv(ann_dir)["file_name"].to_list()
+    if isinstance(ext_file, str):
+        targets = []
+        if ext_file.endswith(".csv"):
+            targets = pd.read_csv(ann_dir)["file_name"].to_list()
+        elif ext_file.endswith(".json"):
+            targets = [img["file_name"] for img in load_json(ext_file)["images"]]
+
         targets = set([Path(file_name).stem for file_name in targets])
         ann_list = [cur_file for cur_file in ann_list if cur_file.stem in targets]
 
@@ -71,12 +81,13 @@ def do_filter(img_dir, ann_dir, csv_file):
     return data
 
 
-def do_convert(img_dir, ann_dir=None, csv_file=None, suffix=".jpg", color=1):
+def do_convert(img_dir, ann_dir=None, ext_file=None, suffix=".jpg", color=1):
+    # ext_file (str): coco format json file path or csv file path
     img_dir = Path(img_dir)
     out_dir = img_dir.name + "_cvt"
     out_dir = img_dir.parent / out_dir
     shutil.rmtree(out_dir, ignore_errors=True)
-    for img_path, ann_path in do_filter(img_dir, ann_dir, csv_file):
+    for img_path, ann_path in do_filter(img_dir, ann_dir, ext_file):
         im = cv2.imread(img_path.as_posix(), color)
         out_file = out_dir / img_path.relative_to(img_dir)
         out_file.parent.mkdir(parents=True, exist_ok=True)
