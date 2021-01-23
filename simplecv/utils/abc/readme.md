@@ -27,3 +27,17 @@ img_dir = "xxx"
 out_dir = "xxx"
 show.show_dataset(img_dir, out_dir)
 ```
+
+## subset
+```
+import sys
+SIMPLECV_PATH = "/workspace/SimpleCV"
+!cd {SIMPLECV_PATH} && git log --oneline -1
+if SIMPLECV_PATH not in sys.path:
+    sys.path.insert(0, SIMPLECV_PATH)
+
+from simplecv.utils.abc import subset
+src_dir = "xxx"
+dst_dir = "xxx"
+subset.do_dataset(src_dir, "coco", dst_dir, "annotations_100/train.json")
+```
