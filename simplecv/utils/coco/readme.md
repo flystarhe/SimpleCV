@@ -21,7 +21,7 @@ from simplecv.utils.coco import builder
 from simplecv.utils.coco import selection
 
 img_dir = "/workspace/notebooks/data_xxxx"
-ann_dir = None
+ann_dir = "/workspace/notebooks/data_xxxx"
 ext_file = None
 # coco format json file path or csv file path
 code_mapping = {

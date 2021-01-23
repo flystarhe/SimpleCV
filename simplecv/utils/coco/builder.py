@@ -1,4 +1,4 @@
-import cv2
+import cv2 as cv
 import json
 import numpy as np
 import os
@@ -82,13 +82,13 @@ def copyfile(in_dir, out_dir, file_name):
 
 def fill_bbox(img_path, del_shapes):
     img_path = str(img_path)
-    im = cv2.imread(img_path, 1)
+    im = cv.imread(img_path, 1)
 
     for bbox in del_shapes:
         x, y, w, h = map(int, bbox)
         im[y: y + h, x: x + w] = 0
 
-    cv2.imwrite(img_path, im)
+    cv.imwrite(img_path, im)
 
 
 def build_dataset(in_dir, code_mapping):
