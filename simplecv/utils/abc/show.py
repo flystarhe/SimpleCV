@@ -17,13 +17,22 @@ def draw_bbox(anns, img_path, color_val):
     if not isinstance(anns, list):
         return img
 
+    img_h, img_w = img.shape[:2]
     for ann in anns:
         x, y, w, h = [int(v) for v in ann["bbox"]]
-        text = "{}: {}/{}={:.2f}".format(ann["label"], h, w, h / w)
         cv.rectangle(img, (x, y), (x + w, y + h), color_val, thickness=2)
-        y = y if y >= 50 else y + h + 50
-        cv.putText(img, text, (x, y), cv.FONT_HERSHEY_COMPLEX, 1.0, color_val)
-    cv.putText(img, img_path.parent.name, (50, 50), cv.FONT_HERSHEY_COMPLEX, 1.0, color_val)
+
+        if y > 30:
+            left_bottom = (x, y)
+        elif h > img_h * 0.5:
+            left_bottom = (x, y + h)
+        else:
+            left_bottom = (x, y + h + 30)
+
+        text = "{}: {}/{}={:.2f}".format(ann["label"], h, w, h / w)
+        cv.putText(img, text, left_bottom, cv.FONT_HERSHEY_COMPLEX, 1.0, color_val)
+
+    cv.putText(img, img_path.parent.name, (30, 30), cv.FONT_HERSHEY_COMPLEX, 1.0, color_val)
     return img
 
 

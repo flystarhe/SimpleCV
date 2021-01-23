@@ -20,6 +20,7 @@ def draw_bbox(anns, img, offset, color_val):
     img_h, img_w = img.shape[:2]
     for i, ann in enumerate(anns, 1):
         x, y, w, h = [int(v) for v in ann["bbox"]]
+        cv.rectangle(img, (x, y), (x + w, y + h), color_val, thickness=1)
 
         if y > 60:
             left_bottom = (x, y + offset)
@@ -30,7 +31,6 @@ def draw_bbox(anns, img, offset, color_val):
 
         text = "{}: {}: {:.2f}: {}/{}={:.2f}".format(
             i, ann["label"], ann.get("score", 1.0), h, w, h / w)
-        cv.rectangle(img, (x, y), (x + w, y + h), color_val, thickness=1)
         cv.putText(img, text, left_bottom, cv.FONT_HERSHEY_COMPLEX, 1.0, color_val)
     return img
 
@@ -48,7 +48,7 @@ def image_show(out_dirs, ori_file, dt, gt, dt_mask=None, gt_mask=None):
     if gt_mask is not None:
         gt = [g for g, flag in zip(gt, gt_mask) if flag == 1]
 
-    dt = sorted(dt, key=lambda x: x["bbox"][1] // 100)
+    dt = sorted(dt, key=lambda x: x["bbox"][1] // 90)
 
     out_img = cv.imread(ori_file, 1)
     text = Path(ori_file).parent.name
