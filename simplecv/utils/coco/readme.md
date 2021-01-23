@@ -20,14 +20,16 @@ from simplecv.utils.coco import abc
 from simplecv.utils.coco import builder
 from simplecv.utils.coco import selection
 
-ann_dir = None
 img_dir = "/workspace/notebooks/data_xxxx"
+ann_dir = None
+csv_file = None
 code_mapping = {
     "__BG": "__DEL",
 }
 
-cvt_dir = abc.do_convert(img_dir, ann_dir, color=0)
+cvt_dir = abc.do_convert(img_dir, ann_dir, csv_file, suffix=".jpg", color=1)
 coco_dir = builder.build_dataset(cvt_dir, code_mapping)
+
 res = selection.split_dataset(coco_dir, seed=100, train_size=300, single_cls=True)
 print("summary:\n", coco_dir, list(map(len, res)))
 

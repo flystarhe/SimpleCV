@@ -1,6 +1,7 @@
 import argparse
 import cv2
 import json
+import pandas as pd
 import shutil
 from lxml import etree
 from pathlib import Path
@@ -40,7 +41,7 @@ def to_json(xml_path):
     return save_json(data, xml_path.with_suffix(".json").as_posix())
 
 
-def do_filter(img_dir, ann_dir=None):
+def do_filter(img_dir, ann_dir, csv_file):
     # `dataset name` format `xxxx_yymmdd`
     img_list = sorted(Path(img_dir).glob("**/*"))
 
@@ -48,6 +49,11 @@ def do_filter(img_dir, ann_dir=None):
         ann_list = sorted(Path(ann_dir).glob("**/*"))
     else:
         ann_list = img_list
+
+    if csv_file is not None:
+        targets = pd.read_csv(ann_dir)["file_name"].to_list()
+        targets = set([Path(file_name).stem for file_name in targets])
+        ann_list = [cur_file for cur_file in ann_list if cur_file.stem in targets]
 
     anns = {}
     for cur_file in ann_list:
@@ -65,12 +71,12 @@ def do_filter(img_dir, ann_dir=None):
     return data
 
 
-def do_convert(img_dir, ann_dir, suffix=".jpg", color=1):
+def do_convert(img_dir, ann_dir=None, csv_file=None, suffix=".jpg", color=1):
     img_dir = Path(img_dir)
     out_dir = img_dir.name + "_cvt"
     out_dir = img_dir.parent / out_dir
     shutil.rmtree(out_dir, ignore_errors=True)
-    for img_path, ann_path in do_filter(img_dir, ann_dir):
+    for img_path, ann_path in do_filter(img_dir, ann_dir, csv_file):
         im = cv2.imread(img_path.as_posix(), color)
         out_file = out_dir / img_path.relative_to(img_dir)
         out_file.parent.mkdir(parents=True, exist_ok=True)
