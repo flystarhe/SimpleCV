@@ -13,12 +13,21 @@ class Color(Enum):
     black = (0, 0, 0)
 
 
-def draw_bbox(anns, img, top, color_val):
+def draw_bbox(anns, img, offset, color_val):
     if not isinstance(anns, list):
         return None
+
+    img_h, img_w = img.shape[:2]
     for i, ann in enumerate(anns, 1):
         x, y, w, h = [int(v) for v in ann["bbox"]]
-        left_bottom = (x, y - 2) if top else (x, y + h + 30)
+
+        if y > 60:
+            left_bottom = (x, y + offset)
+        elif h > img_h * 0.5:
+            left_bottom = (x, y + h + offset)
+        else:
+            left_bottom = (x, y + h + 60 + offset)
+
         text = "{}: {}: {:.2f}: {}/{}={:.2f}".format(
             i, ann["label"], ann.get("score", 1.0), h, w, h / w)
         cv.rectangle(img, (x, y), (x + w, y + h), color_val, thickness=1)
@@ -43,18 +52,18 @@ def image_show(out_dirs, ori_file, dt, gt, dt_mask=None, gt_mask=None):
 
     out_img = cv.imread(ori_file, 1)
     text = Path(ori_file).parent.name
-    cv.putText(out_img, text, (50, 30), cv.FONT_HERSHEY_COMPLEX, 1.0, Color.blue.value)
+    cv.putText(out_img, text, (30, 30), cv.FONT_HERSHEY_COMPLEX, 1.0, Color.blue.value)
     text = ",".join(sorted(set([d["label"] for d in dt])))
-    cv.putText(out_img, text, (50, 60), cv.FONT_HERSHEY_COMPLEX, 1.0, Color.red.value)
+    cv.putText(out_img, text, (30, 60), cv.FONT_HERSHEY_COMPLEX, 1.0, Color.red.value)
     text = ",".join(sorted(set([g["label"] for g in gt])))
-    cv.putText(out_img, text, (50, 90), cv.FONT_HERSHEY_COMPLEX, 1.0, Color.green.value)
+    cv.putText(out_img, text, (30, 90), cv.FONT_HERSHEY_COMPLEX, 1.0, Color.green.value)
 
     for i, d in enumerate(dt, 1):
         x, y, w, h = [int(v) for v in d["bbox"]]
         text = "{}: {}: {}: {:.2f}: {}/{}={:.2f}".format(
             i, (x, y), d["label"], d.get("score", 1.0), h, w, h / w)
-        cv.putText(out_img, text, (50, 90 + 30 * i), cv.FONT_HERSHEY_COMPLEX, 1.0, Color.blue.value)
+        cv.putText(out_img, text, (30, 90 + 30 * i), cv.FONT_HERSHEY_COMPLEX, 1.0, Color.blue.value)
 
-    draw_bbox(dt, out_img, True, Color.red.value)
-    draw_bbox(gt, out_img, False, Color.green.value)
+    draw_bbox(dt, out_img, 0, Color.red.value)
+    draw_bbox(gt, out_img, -30, Color.green.value)
     save_image(out_dirs, Path(ori_file).name, out_img)

@@ -1,3 +1,4 @@
+import hiplot as hip
 import json
 import numpy as np
 
@@ -22,31 +23,18 @@ def best_iou(w, h, anchors, ratios):
 
 
 def bbox_quantile(coco_file, crop_size=640, scales=[8], ratios=[0.5, 1.0, 2.0]):
-    ious = []
-    areas = []
-    h_ratios = []
-    min_sizes = []
-    coco = load_json(coco_file)
+    data = []
     base_sizes = [4, 8, 16, 32, 64]
     anchors = [s * x for s in scales for x in base_sizes]
+
+    coco = load_json(coco_file)
+    print("\n" + json.dumps(coco["categories"]) + "\n")
+
     for ann in coco["annotations"]:
-        w, h = ann["bbox"][2:]
-        areas.append(w * h)
-        h_ratios.append(h / w)
-        min_sizes.append(min(w, h))
-        w, h = min(crop_size, w), min(crop_size, h)
-        ious.append(best_iou(w, h, anchors, ratios))
+        w, h = [min(crop_size, x) for x in ann["bbox"][2:]]
+        data.append({"id": ann["category_id"], "iou": best_iou(w, h, anchors, ratios),
+                     "h_ratio": h / w, "h_ratio_log2": np.log2(h / w),
+                     "area": w * h, "min_size": min(w, h)})
 
-    q = [i / 20 for i in range(0, 21)]
-
-    res = np.quantile(ious, q, interpolation="higher")
-    print("ious:", ["{:.2f}:{:.2f}".format(a, b) for a, b in zip(q, res)])
-
-    res = np.quantile(areas, q, interpolation="higher")
-    print("areas:", ["{:.2f}:{:.2f}".format(a, b) for a, b in zip(q, res)])
-
-    res = np.quantile(h_ratios, q, interpolation="higher")
-    print("h_ratios:", ["{:.2f}:{:.2f}".format(a, b) for a, b in zip(q, res)])
-
-    res = np.quantile(min_sizes, q, interpolation="higher")
-    print("min_sizes:", ["{:.2f}:{:.2f}".format(a, b) for a, b in zip(q, res)])
+    hip.Experiment.from_iterable(data).display()
+    return True

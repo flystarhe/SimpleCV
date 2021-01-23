@@ -2,6 +2,7 @@ import argparse
 import cv2 as cv
 import shutil
 from pathlib import Path
+from tqdm import tqdm
 
 
 IMG_EXTENSIONS = set([".jpg", ".jpeg", ".png", ".bmp"])
@@ -28,7 +29,7 @@ def _patch_img(out_dir, img_path, patch_size, color_mode=1):
     suffix = img_path.suffix
     for y in ys:
         for x in xs:
-            out_file = out_dir / "{}-{:02d}{}".format(stem, cnt, suffix)
+            out_file = out_dir / "{}-{:04d}{}".format(stem, cnt, suffix)
             sub_img = img[y: y + patch_size, x: x + patch_size]
             cv.imwrite(str(out_file), sub_img)
             cnt += 1
@@ -42,7 +43,7 @@ def do_patch(img_dir, out_dir, patch_size, color_mode=1):
     imgs = [img for img in img_dir.glob("**/*") if img.suffix in IMG_EXTENSIONS]
     print("[patch.do_patch] imgs: {}".format(len(imgs)))
 
-    for img_path in imgs:
+    for img_path in tqdm(imgs):
         _patch_img(out_dir, img_path, patch_size, color_mode)
     return str(out_dir)
 

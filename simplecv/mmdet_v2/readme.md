@@ -24,6 +24,7 @@ docker load -i mmdet2.7-20.12.tar
 
 docker run --gpus device=0 -d -p 9000:9000 --ipc=host --name test -v "$(pwd)":/workspace simplecv:mmdet2.7 [dev|ssh|app] \
     /workspace/faster_rcnn.py /workspace/latest.pth 640 dist 2.0
+docker update --restart=always test
 ```
 
 `port config checkpoint [patch:int] [mode:str] [param:float]`:

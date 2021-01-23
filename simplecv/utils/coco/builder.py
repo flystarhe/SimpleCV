@@ -106,9 +106,9 @@ def build_dataset(in_dir, code_mapping):
     for img_path, ann_path in data:
         ann_data = load_json(in_dir / ann_path)
         shapes = ann_data["shapes"]
+
         if len(shapes) == 0:
-            print("skip: " + img_path)
-            continue
+            print("non-shapes: " + img_path)
 
         img_w = ann_data["imageWidth"]
         img_h = ann_data["imageHeight"]

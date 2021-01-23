@@ -41,7 +41,7 @@ def to_json(xml_path):
 
 
 def do_filter(img_dir, ann_dir=None):
-    # `*_dir` format `xxxx_mmdd_light_xxxx`
+    # `dataset name` format `xxxx_yymmdd`
     img_list = sorted(Path(img_dir).glob("**/*"))
 
     if ann_dir is not None:
@@ -61,7 +61,7 @@ def do_filter(img_dir, ann_dir=None):
 
     ks = set(anns.keys()) & set(imgs.keys())
     data = [(imgs[k], anns[k]) for k in sorted(ks)]
-    print("[abs.do_filter] cnt {}".format(len(data)))
+    print("[abc.do_filter] cnt {}".format(len(data)))
     return data
 
 
@@ -76,10 +76,10 @@ def do_convert(img_dir, ann_dir, suffix=".jpg", color=1):
         out_file.parent.mkdir(parents=True, exist_ok=True)
         cv2.imwrite(out_file.with_suffix(suffix).as_posix(), im)
         shutil.copyfile(ann_path, out_file.with_suffix(ann_path.suffix))
-    print("[abs.do_convert] out {}".format(out_dir))
+    print("[abc.do_convert] out {}".format(out_dir))
 
     xml_list = sorted(out_dir.glob("**/*.xml"))
-    print("[abs.to_json] xml {}".format(len(xml_list)))
+    print("[abc.to_json] xml {}".format(len(xml_list)))
     for xml_path in xml_list:
         to_json(xml_path)
     return str(out_dir)

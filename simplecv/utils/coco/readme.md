@@ -24,7 +24,6 @@ ann_dir = None
 img_dir = "/workspace/notebooks/data_xxxx"
 code_mapping = {
     "__BG": "__DEL",
-    "__FG": "__XXX",
 }
 
 cvt_dir = abc.do_convert(img_dir, ann_dir, color=0)

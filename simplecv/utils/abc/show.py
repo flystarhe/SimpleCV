@@ -21,6 +21,7 @@ def draw_bbox(anns, img_path, color_val):
         x, y, w, h = [int(v) for v in ann["bbox"]]
         text = "{}: {}/{}={:.2f}".format(ann["label"], h, w, h / w)
         cv.rectangle(img, (x, y), (x + w, y + h), color_val, thickness=2)
+        y = y if y >= 50 else y + h + 50
         cv.putText(img, text, (x, y), cv.FONT_HERSHEY_COMPLEX, 1.0, color_val)
     cv.putText(img, img_path.parent.name, (50, 50), cv.FONT_HERSHEY_COMPLEX, 1.0, color_val)
     return img

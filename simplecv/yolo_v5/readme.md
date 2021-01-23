@@ -9,54 +9,19 @@
 * Python: 3.6
 * PyTorch: 1.7.0
 * YOLO PATH: `/usr/src`
-* SSH INFO: `ssh root@ip -p 9001`
-* Jupyter: `http://ip:9000/?token=hi`
+* [http://ip:9000/?token=hi](#) for `dev`
+* `/usr/sbin/sshd -D -p 9000` for `ssh` mode
+* `python /workspace/app_tornado.py 9000 ${@:2}` for `app` mode
 
 ```
-docker pull flystarhe/simplecv:yolo5.3.1
-docker run --gpus all -d -p 9000:9000 -p 9001:9001 --ipc=host --name yolo5 -v "$(pwd)":/workspace flystarhe/simplecv:yolo5.3.1
-docker update --restart=always yolo5
+docker pull registry.cn-hangzhou.aliyuncs.com/flystarhe/containers:yolo5.3.1
+docker tag registry.cn-hangzhou.aliyuncs.com/flystarhe/containers:yolo5.3.1 simplecv:yolo5.3.1
 
-docker save -o simplecv-yolo5.tar flystarhe/simplecv:yolo5.3.1
-docker load -i simplecv-yolo5.tar
-```
+docker save -o yolo5.3.1-20.12.tar simplecv:yolo5.3.1
+docker load -i yolo5.3.1-20.12.tar
 
->`docker cp *.pth name:/root/.cache/torch/hub/checkpoints/`
-
-`/workspace/(app_tornado.py + config.py + checkpoint.pth)`:
-```python
-import requests
-
-url = "http://ip:9001/main"
-vals = {"image": "/workspace/test.png"}
-
-response = requests.get(url, params=vals)
-print(response.status_code)
-print(response.text)
-```
-
-## yolo
-```
-import os
-os.environ["MKL_THREADING_LAYER"] = "GNU"
-
-YOLO_PATH = "/usr/src/yolo"
-SIMPLECV_PATH = "/workspace/SimpleCV"
-!cd {SIMPLECV_PATH} && git log --oneline -1
-
-os.environ["SIMPLECV_PATH"] = SIMPLECV_PATH
-os.environ["YOLO_PATH"] = YOLO_PATH
-os.chdir(SIMPLECV_PATH)
-!pwd
-
-import time
-EXPERIMENT_NAME = time.strftime("xxxx_%m%d_%H%M")
-EXPERIMENT_NAME
-```
-
-Train:
-```
-?
+docker run --gpus device=0 -d -p 9000:9000 --ipc=host --name test -v "$(pwd)":/workspace simplecv:yolo5.3.1 [dev|ssh|app]
+docker update --restart=always test
 ```
 
 ## notes

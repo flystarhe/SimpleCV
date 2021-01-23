@@ -1,0 +1,22 @@
+# pip install -r requirements.txt
+
+# base ----------------------------------------
+albumentations
+lxml
+networkx
+notebook
+opencv-python
+scikit-learn
+tornado
+tqdm
+
+# logging -------------------------------------
+# wandb
+
+# plotting ------------------------------------
+hiplot  # High dimensional Interactive Plotting
+seaborn  # statistical data visualization
+
+# extras --------------------------------------
+# pycocotools>=2.0  # COCO mAP
+# thop  # FLOPS computation
