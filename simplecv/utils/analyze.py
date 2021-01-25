@@ -15,14 +15,16 @@ from simplecv.utils import increment_path
 from simplecv.utils import visualize as viz
 
 
-def json_type(v):
+def to_json(v):
     try:
         if isinstance(v, int):
             return v
         if isinstance(v, str):
             return v
+        if isinstance(v, dict):
+            return {to_json(a): to_json(b) for a, b in v.items()}
         if isinstance(v, Iterable):
-            return [json_type(i) for i in v]
+            return [to_json(a) for a in v]
         return float(v)
     except Exception:
         print("Unknown type:", type(v), v)
@@ -356,7 +358,7 @@ def hiplot_analysis_object(results, score_thr, **kwargs):
                 vals.append([file_name, 0.] + a + b)
 
     names = "file_name,iou,label,score,w,h,gt_label,gt_score,gt_w,gt_h".split(",")
-    data = [{a: json_type(b) for a, b in zip(names, val)} for val in vals]
+    data = [{a: to_json(b) for a, b in zip(names, val)} for val in vals]
     hip.Experiment.from_iterable(data).display()
     return "jupyter.hiplot"
 

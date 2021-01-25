@@ -60,7 +60,7 @@ def convert_coco_json(coco_dir, json_dir):
             h, w, f = img["height"], img["width"], img["file_name"]
 
             # format is [top left x, top left y, width, height]
-            box = np.array(x["bbox"], dtype=np.float)
+            box = np.array(x["bbox"], dtype=np.float32)
             box[:2] += box[2:] / 2  # to center
             box[[0, 2]] /= w  # normalize x
             box[[1, 3]] /= h  # normalize y

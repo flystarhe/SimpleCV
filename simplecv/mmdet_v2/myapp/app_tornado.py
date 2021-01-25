@@ -6,6 +6,7 @@ import time
 import tornado.ioloop
 import tornado.web
 import traceback
+from collections.abc import Iterable
 
 import torch
 from mmcv.parallel import collate
@@ -17,6 +18,22 @@ from app_nms import clean_by_bbox
 
 
 os.environ["MKL_THREADING_LAYER"] = "GNU"
+
+
+def to_json(v):
+    try:
+        if isinstance(v, int):
+            return v
+        if isinstance(v, str):
+            return v
+        if isinstance(v, dict):
+            return {to_json(a): to_json(b) for a, b in v.items()}
+        if isinstance(v, Iterable):
+            return [to_json(a) for a in v]
+        return float(v)
+    except Exception:
+        print("Unknown type:", type(v), v)
+    return v
 
 
 class Resize2(object):
@@ -211,6 +228,7 @@ class MainHandler(tornado.web.RequestHandler):
         except Exception:
             err = traceback.format_exc()
             res = {"status": 1, "time": int(time.time()), "data": err}
+        res = to_json(res)
         self.finish(res)
         cached.add(main=res)
 

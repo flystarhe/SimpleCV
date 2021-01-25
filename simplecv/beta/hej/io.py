@@ -3,7 +3,24 @@ import os
 import json
 import pickle
 import shutil
+from collections.abc import Iterable
 from pathlib import Path
+
+
+def to_json(v):
+    try:
+        if isinstance(v, int):
+            return v
+        if isinstance(v, str):
+            return v
+        if isinstance(v, dict):
+            return {to_json(a): to_json(b) for a, b in v.items()}
+        if isinstance(v, Iterable):
+            return [to_json(a) for a in v]
+        return float(v)
+    except Exception:
+        print("Unknown type:", type(v), v)
+    return v
 
 
 def copyfile(src, dst):
@@ -36,6 +53,7 @@ def load_json(json_file):
 
 def save_json(data, json_file):
     with open(json_file, "w") as f:
+        data = to_json(data)
         json.dump(data, f, indent=4)
     return json_file
 
