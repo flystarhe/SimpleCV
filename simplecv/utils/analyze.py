@@ -341,7 +341,7 @@ def hiplot_analysis_object(results, score_thr, **kwargs):
                 vals.append([file_name, 0.] + a + b)
 
     names = "file_name,iou,label,score,w,h,gt_label,gt_score,gt_w,gt_h".split(",")
-    data = [{a: b for a, b in zip(names, val)} for val in vals]
+    data = [{a: b if isinstance(b, str) else float(b) for a, b in zip(names, val)} for val in vals]
     hip.Experiment.from_iterable(data).display()
     return "jupyter.hiplot"
 
