@@ -59,6 +59,7 @@ EXPERIMENT_NAME = "PLAN_XXXX"
 
 ## train
 ```
+%%time
 os.environ["CROP_SIZE"] = "640"
 FLAG = "lr_1x_epochs_1x"
 CONFIG_NAME = "faster_rcnn"
@@ -186,6 +187,7 @@ os.environ["CFG_OPTIONS"] = """
 
 ### test
 ```
+%%time
 EXPERIMENT_NAME = "xxxx"
 FLAG = "xxxx"
 CONFIG_NAME = "xxxx"
@@ -253,6 +255,7 @@ LOG_FILES, LOG_KEYS, LOG_LABELS = " ".join(LOG_FILES), " ".join(LOG_KEYS), " ".j
 
 ## notes
 ```
+%%time
 import sys
 from pathlib import Path
 
@@ -264,14 +267,18 @@ if SIMPLECV_PATH not in sys.path:
 
 from simplecv.utils.analyze import display_dataset
 from simplecv.utils.analyze import display_hardmini
+from simplecv.utils.analyze import hiplot_analysis_object
 
 pkl_file = "xxxx"
 score_thr = {"*": 0.3}
 output_dir = str(Path(pkl_file).parent) + "-viz"
 
-kwargs = dict(show=False, clean_mode="min", clean_param=0.1, match_mode="iou", pos_iou_thr=0.1, min_pos_iou=0.01)
-display_hardmini(pkl_file, score_thr, output_dir, simple=True, **kwargs)
+kwargs = dict(clean_mode="min", clean_param=0.1, match_mode="iou", min_pos_iou=1e-5)
+hiplot_analysis_object(pkl_file, score_thr, **kwargs)
 
-kwargs = dict(clean_mode="min", clean_param=0.1)
-display_dataset(pkl_file, score_thr, output_dir, simple=True, **kwargs)
+kwargs = dict(simple=True, ext_file=None, clean_mode="min", clean_param=0.1)
+display_dataset(pkl_file, score_thr, output_dir, **kwargs)
+
+kwargs = dict(show=True, clean_mode="min", clean_param=0.1, match_mode="iou", pos_iou_thr=0.1, min_pos_iou=0.01)
+display_hardmini(pkl_file, score_thr, output_dir, **kwargs)
 ```

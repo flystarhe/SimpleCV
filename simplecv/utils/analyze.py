@@ -1,7 +1,9 @@
 import os
 import shutil
 
+import hiplot as hip
 import numpy as np
+import pandas as pd
 from collections import defaultdict
 from pathlib import Path
 from sklearn.metrics import confusion_matrix
@@ -250,36 +252,7 @@ def matrix_analysis_image(results, score_thr, out_file=None, **kwargs):
     return bads_tail[1:]
 
 
-def display_dataset(results, score_thr, output_dir, simple=False, **kwargs):
-    """Show model prediction results, none gt.
-
-    Args:
-        results (list): List of `(file_name, none, none, dt, none)`.
-            Via `simplecv.mmdet_v2.py_test.test_dir()`.
-        score_thr (dict): Such as `dict(CODE1=S1,CODE2=S2,...)`.
-        output_dir (str): Directory where the draft are saved.
-        simple (bool): Whether to simplify the draft image.
-        show (bool): Whether to save the bbox-picture.
-    Returns:
-        None.
-    """
-    clean_mode = kwargs.get("clean_mode", "min")
-    clean_param = kwargs.get("clean_param", 0.1)
-    output_dir = increment_path(output_dir, exist_ok=False)
-
-    if isinstance(results, str):
-        results = io.load_pkl(results)
-
-    for file_name, _, _, dt, gt in results:
-        dt = [d for d in dt if d["score"] >= get_val(score_thr, d["label"], 0.3)]
-        if simple:
-            dt = nms.clean_by_bbox(dt, clean_mode, clean_param)
-
-        viz.image_show([os.path.join(output_dir, "images-pred")], file_name, dt, gt, None, None)
-    return str(output_dir)
-
-
-def display_hardmini(results, score_thr, output_dir, simple=True, **kwargs):
+def display_hardmini(results, score_thr, output_dir, **kwargs):
     """Hardmini focus `FP + FN`.
 
     Args:
@@ -287,24 +260,24 @@ def display_hardmini(results, score_thr, output_dir, simple=True, **kwargs):
             Via `simplecv.utils.translate.trans_test_results()`.
         score_thr (dict): Such as `dict(CODE1=S1,CODE2=S2,...)`.
         output_dir (str): Directory where the draft are saved.
-        simple (bool): Whether to simplify the draft image.
-        show (bool): Whether to save the bbox-picture.
     Returns:
         None.
     """
     show = kwargs.get("show", False)
+    simple = kwargs.get("simple", True)
     clean_mode = kwargs.get("clean_mode", "min")
     clean_param = kwargs.get("clean_param", 0.1)
     output_dir = increment_path(output_dir, exist_ok=False)
 
     if isinstance(results, str):
+        shutil.copy(results, output_dir)
         results = io.load_pkl(results)
 
     out_file = os.path.join(output_dir, "readme.csv")
     bads_tail = matrix_analysis_object(results, score_thr, out_file, **kwargs)
 
     if not show:
-        return str(output_dir)
+        return str(out_file)
 
     for (file_name, _, _, dt, gt), line in zip(results, bads_tail):
         dt = [d for d in dt if d["score"] >= get_val(score_thr, d["label"], 0.3)]
@@ -321,5 +294,91 @@ def display_hardmini(results, score_thr, output_dir, simple=True, **kwargs):
 
             ann_path = Path(file_name).with_suffix(".json")
             for out_dir in out_dirs:
-                shutil.copyfile(ann_path, os.path.join(out_dir, ann_path.name))
+                shutil.copy(ann_path, out_dir)
+    return str(output_dir)
+
+
+def hiplot_analysis_object(results, score_thr, **kwargs):
+    clean_mode = kwargs.get("clean_mode", "min")
+    clean_param = kwargs.get("clean_param", 0.1)
+    match_mode = kwargs.get("match_mode", "iou")
+    min_pos_iou = kwargs.get("min_pos_iou", 1e-5)
+
+    if isinstance(results, str):
+        results = io.load_pkl(results)
+
+    vals = []
+    for file_name, _, _, dt, gt in results:
+        dt = [d for d in dt if d["score"] >= get_val(score_thr, d["label"], 0.3)]
+        dt = nms.clean_by_bbox(dt, clean_mode, clean_param)
+        ious = nms.bbox_overlaps(dt, gt, match_mode)
+
+        exclude_i = set()
+        exclude_j = set()
+        if ious is not None:
+            for i, j in enumerate(ious.argmax(axis=1)):
+                iou = ious[i, j]
+                d, g = dt[i], gt[j]
+                if iou >= min_pos_iou:
+                    a = [d["label"], d["score"]] + d["bbox"][2:]
+                    b = [g["label"], g["score"]] + g["bbox"][2:]
+                    vals.append([file_name, iou] + a + b)
+                    exclude_i.add(i)
+                    exclude_j.add(j)
+
+        for i, d in enumerate(dt):
+            d = dt[i]
+            if i not in exclude_i:
+                a = [d["label"], d["score"]] + d["bbox"][2:]
+                b = ["none", 0., 0, 0]
+                vals.append([file_name, 0.] + a + b)
+
+        for j, g in enumerate(gt):
+            g = gt[j]
+            if j not in exclude_j:
+                a = ["none", 0., 0, 0]
+                b = [g["label"], g["score"]] + g["bbox"][2:]
+                vals.append([file_name, 0.] + a + b)
+
+    names = "file_name,iou,label,score,w,h,gt_label,gt_score,gt_w,gt_h".split(",")
+    data = [{a: b for a, b in zip(names, val)} for val in vals]
+    hip.Experiment.from_iterable(data).display()
+    return "jupyter.hiplot"
+
+
+def display_dataset(results, score_thr, output_dir, **kwargs):
+    """Show model prediction results, allow gt is empty.
+
+    Args:
+        results (list): List of `(file_name, none, none, dt, none)`.
+            Via `simplecv.mmdet_v2.py_test.test_dir()`.
+        score_thr (dict): Such as `dict(CODE1=S1,CODE2=S2,...)`.
+        output_dir (str): Directory where the draft are saved.
+    Returns:
+        None.
+    """
+    simple = kwargs.get("simple", True)
+    ext_file = kwargs.get("ext_file", None)
+    clean_mode = kwargs.get("clean_mode", "min")
+    clean_param = kwargs.get("clean_param", 0.1)
+    output_dir = increment_path(output_dir, exist_ok=False)
+
+    if isinstance(results, str):
+        shutil.copy(results, output_dir)
+        results = io.load_pkl(results)
+
+    targets = None
+    if ext_file is not None:
+        shutil.copy(ext_file, output_dir)
+        targets = set(pd.read_csv(ext_file)["file_name"].to_list())
+
+    for file_name, _, _, dt, gt in results:
+        if targets is not None and file_name not in targets:
+            continue
+
+        dt = [d for d in dt if d["score"] >= get_val(score_thr, d["label"], 0.3)]
+        if simple:
+            dt = nms.clean_by_bbox(dt, clean_mode, clean_param)
+
+        viz.image_show([os.path.join(output_dir, "images-pred")], file_name, dt, gt, None, None)
     return str(output_dir)

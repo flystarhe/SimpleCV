@@ -6,10 +6,14 @@ import shutil
 from pathlib import Path
 
 
-def copy_img(img_path, out_dir):
-    out_file = out_dir / Path(img_path).name
-    shutil.copyfile(img_path, out_file)
-    return img_path
+def copyfile(src, dst):
+    # copies the file src to the file or directory dst
+    return shutil.copy(src, dst)
+
+
+def copyfile2(src, dst):
+    # dst must be the complete target file name
+    return shutil.copyfile(src, dst)
 
 
 def load_pkl(pkl_file):
