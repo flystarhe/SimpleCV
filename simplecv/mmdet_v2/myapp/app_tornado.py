@@ -228,8 +228,7 @@ class MainHandler(tornado.web.RequestHandler):
         except Exception:
             err = traceback.format_exc()
             res = {"status": 1, "time": int(time.time()), "data": err}
-        res = to_json(res)
-        self.finish(res)
+        self.finish(to_json(res))
         cached.add(main=res)
 
 
