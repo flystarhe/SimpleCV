@@ -5,6 +5,7 @@ import hiplot as hip
 import numpy as np
 import pandas as pd
 from collections import defaultdict
+from collections import Iterable
 from pathlib import Path
 from sklearn.metrics import confusion_matrix
 
@@ -12,6 +13,20 @@ from simplecv.beta.hej import io
 from simplecv.utils import nms
 from simplecv.utils import increment_path
 from simplecv.utils import visualize as viz
+
+
+def json_type(v):
+    try:
+        if isinstance(v, Iterable):
+            return [json_type(i) for i in v]
+        if isinstance(v, str):
+            return v
+        if isinstance(v, int):
+            return v
+        return float(v)
+    except Exception:
+        print("Unknown type:", type(v), v)
+    return v
 
 
 def get_val(data, key, val=None):
@@ -341,7 +356,7 @@ def hiplot_analysis_object(results, score_thr, **kwargs):
                 vals.append([file_name, 0.] + a + b)
 
     names = "file_name,iou,label,score,w,h,gt_label,gt_score,gt_w,gt_h".split(",")
-    data = [{a: b if isinstance(b, str) else float(b) for a, b in zip(names, val)} for val in vals]
+    data = [{a: json_type(b) for a, b in zip(names, val)} for val in vals]
     hip.Experiment.from_iterable(data).display()
     return "jupyter.hiplot"
 
