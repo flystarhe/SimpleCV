@@ -5,7 +5,7 @@ import hiplot as hip
 import numpy as np
 import pandas as pd
 from collections import defaultdict
-from collections import Iterable
+from collections.abc import Iterable
 from pathlib import Path
 from sklearn.metrics import confusion_matrix
 
@@ -17,12 +17,12 @@ from simplecv.utils import visualize as viz
 
 def json_type(v):
     try:
-        if isinstance(v, Iterable):
-            return [json_type(i) for i in v]
-        if isinstance(v, str):
-            return v
         if isinstance(v, int):
             return v
+        if isinstance(v, str):
+            return v
+        if isinstance(v, Iterable):
+            return [json_type(i) for i in v]
         return float(v)
     except Exception:
         print("Unknown type:", type(v), v)
