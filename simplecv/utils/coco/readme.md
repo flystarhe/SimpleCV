@@ -21,9 +21,9 @@ from simplecv.utils.coco import builder
 from simplecv.utils.coco import selection
 
 img_dir = "/workspace/notebooks/data_xxxx"
-ann_dir = "/workspace/notebooks/data_xxxx"
+ann_dir = None
 ext_file = None
-# coco format json file path or csv file path
+# ext_file (str): coco format json file path or csv file path or image/annotation dir
 code_mapping = {
     "__BG": "__DEL",
 }

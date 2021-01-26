@@ -52,7 +52,9 @@ def do_filter(img_dir, ann_dir, ext_file):
     img_list = [x for x in img_list if x.suffix in IMG_EXTENSIONS]
 
     if ext_file is not None:
-        if ext_file.endswith(".csv"):
+        if Path(ext_file).is_dir():
+            targets = [x for x in Path(ext_file).glob("**/*")]
+        elif ext_file.endswith(".csv"):
             targets = pd.read_csv(ext_file)["file_name"].to_list()
         elif ext_file.endswith(".json"):
             targets = [img["file_name"] for img in load_json(ext_file)["images"]]
@@ -79,7 +81,7 @@ def do_filter(img_dir, ann_dir, ext_file):
 
 
 def do_convert(img_dir, ann_dir=None, ext_file=None, suffix=".jpg", color=1):
-    # ext_file (str): coco format json file path or csv file path
+    # ext_file (str): coco format json file path or csv file path or image/annotation dir
     img_dir = Path(img_dir)
     out_dir = img_dir.name + "_cvt"
     out_dir = img_dir.parent / out_dir
