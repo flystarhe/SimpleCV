@@ -268,15 +268,22 @@ from simplecv.utils.analyze import display_hardmini
 from simplecv.utils.analyze import hiplot_analysis_object
 
 pkl_file = "xxxx"
-ext_file = "xxxx"
 score_thr = {"*": 0.3}
-output_dir = str(Path(pkl_file).parent) + "-viz"
 
 kwargs = dict(clean_mode="min", clean_param=0.1, match_mode="iou", min_pos_iou=1e-5)
 hiplot_analysis_object(pkl_file, score_thr, **kwargs)
 
+ext_file = None
+pkl_file = "xxxx"
+score_thr = {"*": 0.3}
+output_dir = str(Path(pkl_file).parent) + "-viz"
+
 kwargs = dict(simple=True, ext_file=ext_file, clean_mode="min", clean_param=0.1)
 display_dataset(pkl_file, score_thr, output_dir, **kwargs)
+
+pkl_file = "xxxx"
+score_thr = {"*": 0.3}
+output_dir = str(Path(pkl_file).parent) + "-viz"
 
 kwargs = dict(show=True, clean_mode="min", clean_param=0.1, match_mode="iou", pos_iou_thr=0.1, min_pos_iou=0.01)
 display_hardmini(pkl_file, score_thr, output_dir, **kwargs)
