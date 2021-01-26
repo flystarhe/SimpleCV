@@ -87,8 +87,7 @@ ARG_TRAIN = "{} --work-dir {} --launcher pytorch".format(CONFIG, WORK_DIR)
 
 !PYTHONPATH={SIMPLECV_PATH}:{MMDET_PATH} python {ARG_DIST} {MY_SCRIPT} {ARG_TRAIN}
 DEL_FILES = " ".join(glob.glob(WORK_DIR + "/epoch_*")[:-2])
-!rm -rfv {DEL_FILES}
-WORK_DIR
+logs = !rm -rfv {DEL_FILES}
 ```
 
 尝试不同主干网络：
@@ -203,7 +202,6 @@ MY_SCRIPT = "{}/simplecv/mmdet_v2/py_test.py".format(SIMPLECV_PATH)
 ARG_TEST = "{} {} {} {} 640 --gpus 2".format(DATA_ROOT, "annotations_100/test.json", CONFIG, CHECKPOINT)
 
 !PYTHONPATH={SIMPLECV_PATH}:{MMDET_PATH} python {MY_SCRIPT} {ARG_TEST}
-WORK_DIR
 ```
 
 ## mmdet/tools
