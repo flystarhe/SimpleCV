@@ -8,6 +8,8 @@ from pathlib import Path
 
 
 DEL_LABELS = set(["__DEL"])
+ANN_EXTENSIONS = set([".json"])
+IMG_EXTENSIONS = set([".jpg", ".jpeg", ".png", ".bmp"])
 
 
 def code_trans(data, key):
@@ -49,13 +51,15 @@ def parsing_dir(data_root):
 
     cache = defaultdict(dict)
 
-    for img_path in sorted(data_root.glob("**/*.jpg")):
-        file_name = img_path.relative_to(data_root).as_posix()
-        cache[img_path.stem]["img"] = file_name
+    for img_path in sorted(data_root.glob("**/*")):
+        if img_path.suffix in IMG_EXTENSIONS:
+            file_name = img_path.relative_to(data_root).as_posix()
+            cache[img_path.stem]["img"] = file_name
 
-    for ann_path in sorted(data_root.glob("**/*.json")):
-        file_name = ann_path.relative_to(data_root).as_posix()
-        cache[ann_path.stem]["ann"] = file_name
+    for ann_path in sorted(data_root.glob("**/*")):
+        if ann_path.suffix in ANN_EXTENSIONS:
+            file_name = ann_path.relative_to(data_root).as_posix()
+            cache[ann_path.stem]["ann"] = file_name
 
     return [(v["img"], v["ann"]) for k, v in cache.items() if "img" in v and "ann" in v and k not in exclude]
 
