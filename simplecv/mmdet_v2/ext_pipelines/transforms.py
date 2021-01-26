@@ -57,10 +57,10 @@ class RandomCrop(object):
 
         inner = (dst_w >= 4) * (dst_h >= 4) * (dst_area >= 64)
 
-        s1 = (dst_area >= src_area * 0.75)
+        s1 = (dst_area >= src_area * 0.8)
         s2 = (dst_area >= self.nonignore_area)
-        s3 = (dst_h >= src_h * 0.75) * (dst_w >= src_h * 1.5)
-        s4 = (dst_w >= src_w * 0.75) * (dst_h >= src_w * 1.5)
+        s3 = (dst_h >= src_h * 0.9) * (dst_w >= src_h * 2.0)
+        s4 = (dst_w >= src_w * 0.9) * (dst_h >= src_w * 2.0)
 
         dst = s1 + s2 + s3 + s4
         drop = np.logical_not(dst)
