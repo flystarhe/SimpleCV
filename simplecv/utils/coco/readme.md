@@ -24,11 +24,11 @@ img_dir = "/workspace/notebooks/data_xxxx"
 ann_dir = None
 ext_file = None
 # ext_file (str): coco format json file path or csv file path or image/annotation dir
+cvt_dir = abc.do_convert(img_dir, ann_dir, ext_file, suffix=".jpg", color=1)
+
 code_mapping = {
     "__BG": "__DEL",
 }
-
-cvt_dir = abc.do_convert(img_dir, ann_dir, ext_file, suffix=".jpg", color=1)
 coco_dir = builder.build_dataset(cvt_dir, code_mapping)
 
 res = selection.split_dataset(coco_dir, seed=100, train_size=300, single_cls=True)
