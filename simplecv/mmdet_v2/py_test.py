@@ -14,6 +14,9 @@ from simplecv.utils.analyze import matrix_analysis_image
 from simplecv.utils.analyze import matrix_analysis_object
 
 
+IMG_EXTENSIONS = set([".jpg", ".jpeg", ".png", ".bmp"])
+
+
 G_THIS_DIR = osp.dirname(__file__)
 G_COMMAND = "CUDA_VISIBLE_DEVICES={} PYTHONPATH={} python {}/py_app.py {} {} {} {}"
 G_PYTHONPATH = "{}:{}".format(os.environ["SIMPLECV_PATH"], os.environ["MMDET_PATH"])
@@ -91,7 +94,7 @@ def test_dir(data_root, config, checkpoint, patch_size, gpus=4):
         The test results, list of `(file_name, target, predict, dt, gt)`.
     """
     temp_file = osp.join(osp.dirname(checkpoint), "mmdet_v2_test_{}.pkl".format(time.strftime("%m%d%H%M")))
-    imgs = [img.as_posix() for img in Path(data_root).glob("**/*.*") if img.suffix == ".jpg"]
+    imgs = [img.as_posix() for img in Path(data_root).glob("**/*.*") if img.suffix in IMG_EXTENSIONS]
 
     results = multi_gpu_test(imgs, config, checkpoint, patch_size, gpus)
     assert len(imgs) == len(results)
