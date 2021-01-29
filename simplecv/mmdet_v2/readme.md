@@ -70,7 +70,7 @@ os.environ["CFG_OPTIONS"] = """
 {
     "optimizer.lr":0.01,"total_epochs":12,
     "lr_config":dict(_delete_=True,policy="step",warmup="linear",warmup_iters=500,warmup_ratio=0.001,step=[8,11]),
-    "evaluation.interval":12,"evaluation.metric":"bbox","log_config.interval":30,
+    "evaluation.interval":12,"evaluation.metric":"bbox","checkpoint_config.interval":12,"log_config.interval":30,
     "data.train":dict(img_prefix="data/coco/",ann_file="data/coco/annotations_100/train.json"),
     "data.test":dict(img_prefix="data/coco/",ann_file="data/coco/annotations_100/test.json"),
     "data.val":dict(img_prefix="data/coco/",ann_file="data/coco/annotations_100/val.json"),
