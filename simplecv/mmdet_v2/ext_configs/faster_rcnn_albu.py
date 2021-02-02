@@ -19,12 +19,8 @@ model = dict(
 
 # image scale format: (w, h)
 albu_train_transforms = [
-    dict(
-        type='RandomBrightnessContrast',
-        brightness_limit=[0.1, 0.3],
-        contrast_limit=[0.1, 0.3],
-        p=0.2),
-    dict(type='JpegCompression', quality_lower=85, quality_upper=95, p=0.2),
+    dict(type='GaussNoise', var_limit=(0.0, 15.0), p=0.5),
+    dict(type='RandomRotate90', p=0.5),
 ]
 img_norm_cfg = dict(
     mean=[123.675, 116.28, 103.53], std=[58.395, 57.12, 57.375], to_rgb=True)
