@@ -131,6 +131,11 @@ mmdet/models/roi_heads/roi_extractors/single_level_roi_extractor.py
 - scale >= finest_scale * 8: level 3
 ```
 
+微调`pipeline`增强:
+```
+"data.train.pipeline.2":dict(type="Resize2",test_mode=False,ratio_range=(0.8,1.2)),
+```
+
 ### Faster R-CNN
 ```
 os.environ["CFG_OPTIONS"] = """

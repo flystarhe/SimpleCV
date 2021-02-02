@@ -25,9 +25,9 @@ img_norm_cfg = dict(
 train_pipeline = [
     dict(type='LoadImageFromFile'),
     dict(type='LoadAnnotations', with_bbox=True),
-    #dict(type='Resize2', test_mode=False, ratio_range=(0.8, 1.2)),
+    dict(type='Resize2', test_mode=True, ratio_range=(0.8, 1.2)),
     dict(type='RandomCrop', height=__CROP_SIZE, width=__CROP_SIZE),
-    dict(type='RandomFlip', flip_ratio=0.5),
+    dict(type='RandomFlip', flip_ratio=0.3, direction=['horizontal', 'vertical', 'diagonal']),
     dict(type='Normalize', **img_norm_cfg),
     dict(type='Pad', size_divisor=32),
     dict(type='DefaultFormatBundle'),
