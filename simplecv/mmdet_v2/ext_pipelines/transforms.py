@@ -120,7 +120,7 @@ class RandomCrop(object):
         dst_img = self._crop_and_paste(img, patch)
         dst_bboxes = self._clip_bboxes(bboxes.copy(), patch)
         dst_mask, drop_mask = self._check_bboxes(bboxes, dst_bboxes)
-        for x1, y1, x2, y2 in dst_bboxes[drop_mask]:
+        for x1, y1, x2, y2 in dst_bboxes[drop_mask].astype(np.int64):
             dst_img[y1: y2, x1: x2] = 0
         dst_bboxes = dst_bboxes[dst_mask]
         dst_labels = labels[dst_mask]
